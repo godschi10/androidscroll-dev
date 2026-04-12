@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getPages, getPage, getRankMathHead, decode } from '../lib/wp';
+
+export async function getStaticPaths() {
+  const pages = await getPages();
+  return pages.map((p: any) => ({
+    params: { page: p.slug },
+  }));
+}
+
+const page = await getPage(Astro.params.page);
+if (!page) return Astro.redirect('/404');
+const rankMathHead = await getRankMathHead(page.slug);
+
+const title = decode(page.title.rendered.replace(/<[^>]+>/g, ''));
+const description = decode(page.excerpt?.rendered?.replace(/<[^>]+>/g, '').trim() ?? '');
+---
+
+<Layout title={title} description={description} rankMathHead={rankMathHead}>
+  <article style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
+    <h1 style="margin-bottom:1em;" set:html={page.title.rendered}></h1>
+    <div class="post-content" set:html={page.content.rendered}></div>
+  </article>
+</Layout>

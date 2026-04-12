@@ -1,0 +1,127 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getPosts, getCategories, decode, excerpt } from '../lib/wp';
+
+const wpPosts = await getPosts(10);
+const allCats = await getCategories();
+
+const parents = allCats.filter((c: any) => c.parent === 0);
+
+const posts = wpPosts.map((p: any) => ({
+  slug: p.slug,
+  id: p.id,
+  data: {
+    title: decode(p.title.rendered.replace(/<[^>]+>/g,'')),
+    date: new Date(p.date),
+    description: excerpt(p.content.rendered, 22),
+    cover: p._embedded?.['wp:featuredmedia']?.[0]?.source_url || null,
+    coverAlt: decode(p.title.rendered.replace(/<[^>]+>/g,'')),
+    categories: p._embedded?.['wp:term']?.[0] || [],
+  }
+}));
+
+const featured = posts[6];
+const recent = posts.slice(0);
+---
+
+<Layout title="Android Tips, Tricks & Guides">
+
+  <!-- Featured Post Hero -->
+  {featured && (
+    <div style="margin-bottom:48px;">
+      <a href={`/${featured.slug}/`} class="group" style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-radius:16px; overflow:hidden; background:var(--bg-surface); border:1px solid var(--border-light); box-shadow:var(--shadow-soft); text-decoration:none; transition:box-shadow 0.3s;">
+        {featured.data.cover ? (
+          <div style="overflow:hidden; min-height:320px;">
+            <img src={featured.data.cover} alt={featured.data.coverAlt} style="width:100%; height:100%; object-fit:cover; transition:transform 0.5s;" class="featured-img" />
+          </div>
+        ) : (
+          <div style="background:linear-gradient(135deg,#00a88f,#008c72); min-height:320px;"></div>
+        )}
+        <div style="padding:40px 36px; display:flex; flex-direction:column; justify-content:center;">
+          <span style="display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#fff; background:var(--brand-primary); padding:4px 12px; border-radius:20px; margin-bottom:16px; width:fit-content;">Featured</span>
+          {featured.data.categories[0] && (
+            <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--brand-primary); margin-bottom:10px;">{decode(featured.data.categories[0].name)}</span>
+          )}
+          <h1 style="font-family:var(--font-heading); font-size:clamp(1.4rem,3vw,2rem); font-weight:800; line-height:1.25; color:var(--text-dark); margin:0 0 14px;" set:html={featured.data.title} />
+          <p style="font-size:14px; line-height:1.7; color:var(--text-muted); margin:0 0 24px;">{featured.data.description}</p>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="https://images.androidscroll.com/g-will-avatar.jpg" alt="G-will" width="32" height="32" style="border-radius:50%; width:32px; height:32px; object-fit:cover;" />
+            <span style="font-size:13px; color:var(--text-muted);">
+              G-will Chijioke · {featured.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+        </div>
+      </a>
+    </div>
+  )}
+
+  <!-- Category Pills -->
+  <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:36px;" id="cat-pills">
+    <button class="cat-pill active" data-cat="all" style="padding:7px 18px; border-radius:20px; background:var(--brand-primary); color:#fff; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border:1.5px solid var(--brand-primary); cursor:pointer;">All</button>
+    {parents.map((cat: any) => (
+      <button class="cat-pill" data-cat={cat.slug} style="padding:7px 18px; border-radius:20px; background:var(--bg-surface); border:1.5px solid var(--border-light); color:var(--text-main); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; transition:all 0.2s;">{decode(cat.name)}</button>
+    ))}
+  </div>
+
+  <!-- Latest Posts -->
+  <h2 style="font-family:var(--font-heading); font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dark); margin:0 0 20px; padding-bottom:12px; border-bottom:2px solid var(--brand-primary); display:inline-block;">Latest Posts</h2>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:24px; margin-top:20px;">
+    {recent.map((post: any) => (
+      <a href={`/${post.slug}/`} style="display:flex; flex-direction:column; border-radius:12px; overflow:hidden; background:var(--bg-surface); border:1px solid var(--border-light); text-decoration:none; transition:all 0.25s; box-shadow:0 1px 4px rgba(0,0,0,0.05);" class="post-card" data-cats={post.data.categories.map((c: any) => c.slug).join(',')}>
+        {post.data.cover ? (
+          <div style="overflow:hidden; height:180px;">
+            <img src={post.data.cover} alt={post.data.coverAlt} style="width:100%; height:100%; object-fit:cover; transition:transform 0.4s;" class="card-img" loading="lazy" />
+          </div>
+        ) : (
+          <div style="height:6px; background:linear-gradient(90deg,var(--brand-primary),var(--brand-hover));"></div>
+        )}
+        <div style="padding:18px; flex:1; display:flex; flex-direction:column;">
+          {post.data.categories[0] && (
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--brand-primary); margin-bottom:6px;">{decode(post.data.categories[0].name)}</span>
+          )}
+          <h3 style="font-family:var(--font-heading); font-size:15px; font-weight:700; line-height:1.4; color:var(--text-dark); margin:0 0 8px;">{post.data.title}</h3>
+          <p style="font-size:13px; line-height:1.6; color:var(--text-muted); margin:0 0 14px; flex:1;">{post.data.description}</p>
+          <span style="font-size:12px; color:var(--text-muted);">{post.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        </div>
+      </a>
+    ))}
+  </div>
+
+</Layout>
+
+<style>
+  a.group:hover .featured-img { transform: scale(1.04); }
+  a.post-card:hover { border-color: var(--brand-primary); box-shadow: 0 4px 20px rgba(0,168,143,0.15); transform: translateY(-2px); }
+  a.post-card:hover .card-img { transform: scale(1.05); }
+  .cat-pill.active { background: var(--brand-primary) !important; color: #fff !important; border-color: var(--brand-primary) !important; }
+  .cat-pill:hover:not(.active) { border-color: var(--brand-primary) !important; color: var(--brand-primary) !important; }
+  .post-card.hidden { display: none !important; }
+
+  @media (max-width: 640px) {
+    a.group { grid-template-columns: 1fr !important; }
+    a.group > div:first-child { min-height: 200px !important; }
+  }
+</style>
+
+<script>
+  const pills = document.querySelectorAll('.cat-pill');
+  const cards = document.querySelectorAll('.post-card');
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      pills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+
+      const cat = (pill as HTMLElement).dataset.cat;
+      cards.forEach(card => {
+        if (cat === 'all') {
+          card.classList.remove('hidden');
+        } else {
+          const cats = (card as HTMLElement).dataset.cats || '';
+          card.classList.toggle('hidden', !cats.split(',').includes(cat));
+        }
+      });
+    });
+  });
+</script>

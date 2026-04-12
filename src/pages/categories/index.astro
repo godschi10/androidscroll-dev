@@ -1,0 +1,51 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCategories, decode } from '../../lib/wp';
+
+const allCats = await getCategories();
+
+// Build parent → children tree
+const parents = allCats.filter((c: any) => c.parent === 0);
+const children = allCats.filter((c: any) => c.parent !== 0);
+
+const categories = parents.map((p: any) => ({
+  ...p,
+  children: children.filter((c: any) => c.parent === p.id),
+}));
+---
+
+<Layout title="Categories">
+<div style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
+  <h1 class="text-3xl font-bold mb-10 text-neutral-900 dark:text-neutral-100">Categories</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    {categories.map((cat: any) => (
+      <div class="bg-surface-2 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden shadow-sm">
+        <a href={`/categories/${cat.slug}`} class="block bg-[#00A88F] px-6 py-4 hover:bg-[#008c72] transition-colors">
+          <h2 class="font-bold" style="color:#fff !important">{ decode(cat.name) }</h2>
+        </a>
+        {cat.children.length > 0 ? (
+          <ul class="p-4 flex flex-col gap-2">
+            {cat.children.map((child: any) => (
+              <li>
+                <a
+                  href={`/categories/${cat.slug}/${child.slug}`}
+                  class="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 hover:text-[#00A88F] dark:hover:text-[#00A88F] transition-colors text-sm font-medium group"
+                >
+                  <span class="text-[#00A88F] group-hover:translate-x-1 transition-transform">→</span>
+                  { decode(child.name) }
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="p-6">
+            <p class="text-sm text-neutral-500 dark:text-neutral-400 italic">
+              Browse all { decode(cat.name) } posts.
+            </p>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+</Layout>

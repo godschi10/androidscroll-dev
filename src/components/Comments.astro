@@ -1,0 +1,145 @@
+---
+const { postId } = Astro.props;
+---
+
+<div id="comments-section" data-post-id={postId}>
+  <div id="comments-loading" class="text-neutral-400 text-sm">Loading comments...</div>
+  <div id="comments-list" style="display:none"></div>
+  <div id="comments-form" style="display:none">
+    <h3 style="font-size:1.1rem; font-weight:800; margin:30px 0 16px;">Leave a Comment</h3>
+    <form id="comment-form" style="display:flex; flex-direction:column; gap:12px;">
+      <div class="comment-form-grid">
+        <input id="c-name" type="text" placeholder="Name *" required style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main);" />
+        <input id="c-email" type="email" placeholder="Email *" required style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main);" />
+      </div>
+      <textarea id="c-content" placeholder="Write a comment..." required rows="4" style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main); resize:vertical;"></textarea>
+      <input id="c-parent" type="hidden" value="0" />
+      <div id="reply-indicator" style="display:none; font-size:13px; color:var(--brand-primary);">
+        Replying to <strong id="reply-name"></strong> <button type="button" id="cancel-reply" style="margin-left:8px; background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:12px;">✕ Cancel</button>
+      </div>
+      <button type="submit" style="align-self:flex-start; padding:10px 24px; background:var(--brand-primary); color:#fff; font-weight:700; border:none; border-radius:var(--radius-main); cursor:pointer; font-family:var(--font-body); font-size:14px;">Post Comment</button>
+      <p id="form-msg" style="font-size:13px; margin:0;"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+const section = document.getElementById('comments-section');
+const postId = section?.dataset.postId;
+const API = 'https://androidscroll.com/wp-json/wp/v2';
+const WP_USER = import.meta.env.PUBLIC_WP_USER;
+const WP_APP_PASS = import.meta.env.PUBLIC_WP_APP_PASS;
+const auth = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
+
+async function loadComments() {
+  const res = await fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`);
+  const comments = await res.json();
+  const loading = document.getElementById('comments-loading');
+  const list = document.getElementById('comments-list');
+  const formWrap = document.getElementById('comments-form');
+  if (!list || !formWrap || !loading) return;
+
+  loading.style.display = 'none';
+  formWrap.style.display = 'block';
+  list.style.display = 'block';
+
+  if (!comments.length) {
+    list.innerHTML = '<p style="color:var(--text-muted); font-size:14px; margin-bottom:24px;">No comments yet. Be the first!</p>';
+    return;
+  }
+
+  // Build tree
+  const top = comments.filter((c: any) => c.parent === 0);
+  const replies = comments.filter((c: any) => c.parent !== 0);
+
+  const renderComment = (c: any, isReply = false) => {
+    const avatar = c.author_avatar_urls?.['48'] || '';
+    const date = new Date(c.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const childReplies = replies.filter((r: any) => r.parent === c.id);
+    return `
+      <div style="display:flex; gap:12px; margin-bottom:20px; ${isReply ? 'margin-left:44px;' : ''}">
+        ${avatar ? `<img src="${avatar}" alt="${c.author_name}" style="width:38px; height:38px; border-radius:50%; flex-shrink:0; margin-top:2px;" />` : '<div style="width:38px; height:38px; border-radius:50%; background:var(--bg-surface-2); flex-shrink:0;"></div>'}
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+            <span style="font-weight:700; font-size:14px; color:var(--text-dark);">${c.author_name}</span>
+            <span style="font-size:12px; color:var(--text-muted);">${date}</span>
+          </div>
+          <div style="font-size:14px; line-height:1.6; color:var(--text-main);">${c.content.rendered}</div>
+          <button class="reply-btn" data-id="${c.id}" data-name="${c.author_name}" style="margin-top:6px; background:none; border:none; cursor:pointer; font-size:12px; color:var(--brand-primary); font-weight:600; padding:0;">↩ Reply</button>
+        </div>
+      </div>
+      ${childReplies.map((r: any) => renderComment(r, true)).join('')}
+    `;
+  };
+
+  list.innerHTML = `<h3 style="font-size:1.1rem; font-weight:800; margin-bottom:20px;">${comments.length} Comment${comments.length !== 1 ? 's' : ''}</h3>` + top.map((c: any) => renderComment(c)).join('');
+
+  // Reply buttons
+  list.querySelectorAll('.reply-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = (btn as HTMLElement).dataset.id;
+      const name = (btn as HTMLElement).dataset.name;
+      (document.getElementById('c-parent') as HTMLInputElement).value = id || '0';
+      const indicator = document.getElementById('reply-indicator');
+      const replyName = document.getElementById('reply-name');
+      if (indicator && replyName) {
+        replyName.textContent = name || '';
+        indicator.style.display = 'flex';
+      }
+      document.getElementById('c-content')?.focus();
+    });
+  });
+}
+
+// Cancel reply
+document.getElementById('cancel-reply')?.addEventListener('click', () => {
+  (document.getElementById('c-parent') as HTMLInputElement).value = '0';
+  const indicator = document.getElementById('reply-indicator');
+  if (indicator) indicator.style.display = 'none';
+});
+
+// Submit comment
+document.getElementById('comment-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = (document.getElementById('c-name') as HTMLInputElement).value;
+  const email = (document.getElementById('c-email') as HTMLInputElement).value;
+  const content = (document.getElementById('c-content') as HTMLTextAreaElement).value;
+  const parent = (document.getElementById('c-parent') as HTMLInputElement).value;
+  const msg = document.getElementById('form-msg');
+
+  if (msg) { msg.textContent = 'Posting...'; msg.style.color = 'var(--text-muted)'; }
+
+  const res = await fetch(`${API}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: auth },
+    body: JSON.stringify({ post: Number(postId), author_name: name, author_email: email, content, parent: Number(parent) })
+  });
+
+  if (res.ok) {
+    if (msg) { msg.textContent = '✓ Comment posted! It may be held for moderation.'; msg.style.color = 'green'; }
+    (document.getElementById('comment-form') as HTMLFormElement).reset();
+    (document.getElementById('c-parent') as HTMLInputElement).value = '0';
+    const indicator = document.getElementById('reply-indicator');
+    if (indicator) indicator.style.display = 'none';
+    setTimeout(() => loadComments(), 1000);
+  } else {
+    const err = await res.json();
+    if (msg) { msg.textContent = err.message || 'Failed to post comment.'; msg.style.color = 'red'; }
+  }
+});
+
+loadComments();
+</script>
+
+<style>
+.comment-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 600px) {
+  .comment-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+</style>

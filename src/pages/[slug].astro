@@ -1,0 +1,162 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getPosts, getPost, getCategories, getRankMathHead, decode} from '../lib/wp';
+import Comments from '../components/Comments.astro';
+
+export async function getStaticPaths() {
+  const posts = await getPosts(100);
+  return posts.map(p => ({ params: { slug: p.slug } }));
+}
+
+const post = await getPost(Astro.params.slug);
+if (!post) return Astro.redirect('/404');
+const rankMathHead = await getRankMathHead(post.slug);
+const allCats = await getCategories();
+
+const title = decode(post.title.rendered.replace(/<[^>]+>/g,''));
+const description = decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim());
+const cover = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
+const date = new Date(post.date);
+
+// reading time
+const wordCount = post.content.rendered.replace(/<[^>]+>/g,' ').split(/\s+/).length;
+const readingTime = Math.max(1, Math.ceil(wordCount / 238));
+
+// add IDs to H2 for TOC
+let i = 0;
+let contentHtml = post.content.rendered.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (m, a, t) => {
+  const id = `h2-${i++}`;
+  return `<h2 id="${id}"${a}>${t}</h2>`;
+});
+const tocHeadings = [...contentHtml.matchAll(/<h2 id="([^"]*)"[^>]*>(.*?)<\/h2>/gi)].map(m => ({ slug: m[1], text: m[2].replace(/<[^>]+>/g,'') }));
+
+// related
+const all = await getPosts(30);
+const related = all.filter(p => p.id!== post.id).slice(0,3);
+---
+<div class="as-progress-container"><div class="as-progress-bar" id="as-progress-bar"></div></div>
+<Layout title={title} description={description} cover={cover} type="article" rankMathHead={rankMathHead}>
+  <article style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
+    {post._embedded?.['wp:term']?.[0]?.length > 0 && (
+    <div class="category_meta">
+      {post._embedded['wp:term'][0].map((cat: any) => {
+        const full = allCats.find((c: any) => c.id === cat.id);
+        if (!full) return null;
+        if (full.parent === 0) {
+          return <a href={`/categories/${cat.slug}`}>{decode(cat.name)}</a>;
+        } else {
+          const parent = allCats.find((c: any) => c.id === full.parent);
+          return <a href={`/categories/${parent?.slug ?? ''}/${cat.slug}`}>{decode(cat.name)}</a>;
+        }
+      })}
+    </div>
+  )}
+  <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
+    <div class="meta-scroll-wrapper"><div class="scrollable-meta">
+      <span class="meta-author-wrapper"><a href="/about"><img src="https://images.androidscroll.com/g-will-avatar.jpg" alt="Gwill Chijioke" width="28" height="28" /><span>Gwill Chijioke</span></a></span>
+      <span class="meta-sep">•</span>
+      <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+      <span class="meta-sep">•</span>
+      <span class="meta-read-time">{readingTime} min read</span>
+    </div></div>
+
+    {cover && (<div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;"><img src={cover} alt={title} style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);" /></div>)}
+
+    {tocHeadings.length > 2 && (
+      <div class="android-scroll-toc toc-collapsed" id="as-toc">
+        <div class="toc-header" id="toc-header"><span class="toc-title">📋 Table of Contents</span><span class="toc-toggle" id="toc-toggle"></span></div>
+        <ul class="toc-list" id="toc-list">{tocHeadings.map(h => (<li><a href={`#${h.slug}`}>{h.text}</a></li>))}</ul>
+      </div>
+    )}
+
+    <div class="post-content" set:html={contentHtml}></div>
+
+  
+
+    <!-- Social Share -->
+  <div style="margin:30px 0; padding:20px 0; border-top:1px solid var(--border-light); border-bottom:1px solid var(--border-light);">
+    <p style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:14px;">Share this post</p>
+    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+      <button id="native-share-btn" style="display:none; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-main); background:var(--bg-surface-2); border:1.5px solid var(--border-light); color:var(--text-dark); font-size:13px; font-weight:600; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>Share</button>
+      <a id="share-fb" href="#" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-main); background:#1877F2; color:#fff; font-size:13px; font-weight:600; text-decoration:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </a>
+      <a id="share-x" href="#" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-main); background:#000; color:#fff; font-size:13px; font-weight:600; text-decoration:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        X
+      </a>
+      <a id="share-pinterest" href="#" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-main); background:#E60023; color:#fff; font-size:13px; font-weight:600; text-decoration:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+        Pinterest
+      </a>
+      <a id="share-whatsapp" href="#" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-main); background:#25D366; color:#fff; font-size:13px; font-weight:600; text-decoration:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        WhatsApp
+      </a>
+      <a id="share-telegram" href="#" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-main); background:#229ED9; color:#fff; font-size:13px; font-weight:600; text-decoration:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        Telegram
+      </a>
+    </div>
+  </div>
+
+  <!-- Author Box -->
+  <div class="custom-author-box">
+    <div class="cab-inner">
+      <div class="cab-avatar-wrapper">
+        <img class="cab-avatar-img" src="https://images.androidscroll.com/g-will-avatar.jpg" alt="Gwill Chijioke" width="100" height="100" />
+      </div>
+      <div class="cab-content">
+        <span class="cab-label">Written by</span>
+        <h3 class="cab-name">Gwill Chijioke</h3>
+        <p class="cab-bio">Android enthusiast and tech writer helping you get the most out of your Android device. Covering tips, fixes, and hidden features since 2020.</p>
+        <div class="cab-footer">
+          <a href="/about-androidscroll" class="cab-more-link">More about the author →</a>
+          <div class="cab-socials">
+            <a href="https://twitter.com/androidscroll" class="cab-social-icon" target="_blank" rel="noopener" aria-label="X/Twitter">
+              <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="https://pinterest.com/androidscroll" class="cab-social-icon" target="_blank" rel="noopener" aria-label="Pinterest">
+              <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    {related.length > 0 && (
+      <div class="related-posts-section"><h3>Related Posts</h3><div class="related-grid">
+        {related.map(r => (<div class="related-card"><a href={`/${r.slug}/`}><div class="related-thumb">{r._embedded?.['wp:featuredmedia']?.[0] && <img src={r._embedded['wp:featuredmedia'][0].source_url} alt="" loading="lazy" />}</div><p class="related-title" set:html={r.title.rendered}></p></a></div>))}
+      </div></div>
+    )}
+
+
+  <!-- Comments -->
+  <div style="margin-top:40px; border-top:1px solid var(--border-light); padding-top:30px;">
+    <Comments postId={post.id} />
+  </div>
+  </article>
+</Layout>
+<button id="as-back-to-top" aria-label="Back to top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
+<script>
+  const pb = document.getElementById('as-progress-bar'); if(pb){window.addEventListener('scroll',()=>{const t=window.scrollY;const h=document.documentElement.scrollHeight-window.innerHeight;pb.style.width=(h>0?t/h*100:0)+'%'})}
+  const btt=document.getElementById('as-back-to-top');if(btt){window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>600));btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}
+  const toc=document.getElementById('as-toc');const th=document.getElementById('toc-header');if(toc&&th){if(localStorage.getItem('toc-open')==='true')toc.classList.remove('toc-collapsed');th.addEventListener('click',()=>{toc.classList.toggle('toc-collapsed');localStorage.setItem('toc-open',!toc.classList.contains('toc-collapsed'))})}
+  // Social share links
+const url = encodeURIComponent(location.href);
+const shareTitle = encodeURIComponent(document.title);
+const coverImg = encodeURIComponent(document.querySelector('article img')?.src || '');
+const fbEl = document.getElementById('share-fb');
+const xEl = document.getElementById('share-x');
+const pinEl = document.getElementById('share-pinterest');
+const waEl = document.getElementById('share-whatsapp');
+const tgEl = document.getElementById('share-telegram');
+if(fbEl) fbEl.href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+if(xEl) xEl.href = `https://x.com/intent/tweet?url=${url}&text=${shareTitle}`;
+if(pinEl) pinEl.href = `https://pinterest.com/pin/create/button/?url=${url}&media=${coverImg}&description=${shareTitle}`;
+if(waEl) waEl.href = `https://wa.me/?text=${shareTitle}%20${url}`;
+if(tgEl) tgEl.href = `https://t.me/share/url?url=${url}&text=${shareTitle}`;
+const sb=document.getElementById('native-share-btn');if(sb&&navigator.share){sb.style.display='inline-flex';sb.addEventListener('click',()=>navigator.share({title:document.title,url:location.href}))}
+</script>

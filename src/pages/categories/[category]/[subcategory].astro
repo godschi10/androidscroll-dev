@@ -1,0 +1,54 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getCategories, getPostsByCategory, decode, excerpt } from '../../../lib/wp';
+
+export async function getStaticPaths() {
+  const cats = await getCategories();
+  const parents = cats.filter((c: any) => c.parent === 0);
+  const children = cats.filter((c: any) => c.parent !== 0);
+
+  return children.map((child: any) => {
+    const parent = parents.find((p: any) => p.id === child.parent);
+    return {
+      params: {
+        category: parent?.slug ?? 'uncategorized',
+        subcategory: child.slug,
+      },
+      props: { child, parent },
+    };
+  });
+}
+
+const { child, parent } = Astro.props;
+const posts = await getPostsByCategory(child.id);
+---
+
+<Layout title={decode(child.name)}>
+  <nav class="text-sm mb-6 flex items-center gap-1 flex-wrap text-neutral-500">
+  {parent && <a href={`/categories/${parent.slug}`} class="text-[#00a88f] hover:underline font-medium">{decode(parent.name)}</a>}
+  {parent && <span class="mx-1">→</span>}
+  <span class="text-neutral-700 dark:text-neutral-300 font-medium">{decode(child.name)}</span>
+</nav>
+  <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">{decode(child.name)}</h1>
+  {posts.length === 0 && <p class="text-neutral-500">No posts yet.</p>}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {posts.map((post: any) => {
+      const img = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
+      const title = decode(post.title.rendered.replace(/<[^>]+>/g, ''));
+      const desc = excerpt(post.content.rendered, 60);
+      return (
+        <a href={`/${post.slug}/`} class="group flex flex-col rounded-xl overflow-hidden bg-surface-2 border border-neutral-200 dark:border-neutral-700 hover:border-[#00a88f] hover:shadow-md transition-all duration-300">
+          {img
+            ? <div class="w-full h-44 overflow-hidden"><img src={img} alt={title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /></div>
+            : <div class="w-full h-2 bg-gradient-to-r from-[#00a88f] to-[#008c72]"></div>
+          }
+          <div class="p-5 flex flex-col flex-1">
+            <h2 class="font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-[#00a88f] transition-colors leading-snug">{title}</h2>
+            <p class="mt-1 text-xs text-neutral-400">{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+            {desc && <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-300 line-clamp-2 flex-1">{desc}</p>}
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</Layout>

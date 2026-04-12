@@ -1,0 +1,314 @@
+---
+import '../styles/global.css';
+import '../styles/style.min.css';
+import '../styles/theme.min.css';
+import SearchOverlay from '../components/SearchOverlay.astro';
+import { getPosts, getCategories, decode } from '../lib/wp';
+
+const wpPosts = await getPosts(100);
+const posts = wpPosts.map((p: any) => ({
+  id: p.slug,
+  slug: p.slug,
+  data: {
+    title: decode(p.title.rendered.replace(/<[^>]+>/g,'')),
+    date: new Date(p.date),
+    description: decode(p.excerpt.rendered.replace(/<[^>]+>/g,'').trim()),
+    cover: p._embedded?.['wp:featuredmedia']?.[0]?.source_url || null,
+    coverAlt: decode(p.title.rendered.replace(/<[^>]+>/g,'')),
+    draft: false,
+    categories: p._embedded?.['wp:term']?.[0]?.map((t: any) => t.slug) || [],
+    parentCategory: p._embedded?.['wp:term']?.[0]?.[0]?.slug || null,
+  }
+})).sort((a: any, b: any) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const allCats = await getCategories();
+const parents = allCats.filter((c: any) => c.parent === 0);
+const children = allCats.filter((c: any) => c.parent !== 0);
+const navCategories = parents.map((p: any) => ({
+  ...p,
+  name: decode(p.name),
+  children: children
+    .filter((c: any) => c.parent === p.id)
+    .map((c: any) => ({ ...c, name: decode(c.name) })),
+}));
+
+const { title, description, cover, coverAlt, type = 'website' } = Astro.props;
+const siteUrl = 'https://androidscroll.com';
+const siteName = 'AndroidScroll';
+const defaultDescription = 'Android tips, tricks and guides';
+const defaultCover = `${siteUrl}/og-default.jpg`;
+const metaTitle = title ? `${title} | ${siteName}` : siteName;
+const metaDescription = description ?? defaultDescription;
+const metaImage = cover ?? defaultCover;
+const metaImageAlt = coverAlt ?? metaTitle;
+const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+const { pathname } = Astro.url;
+const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).length === 1;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="canonical" href={canonicalURL} />
+  <title>{metaTitle}</title>
+  <meta name="description" content={metaDescription} />
+  <meta name="theme-color" content="#008f79" />
+  <meta property="og:type" content={type} />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:site_name" content={siteName} />
+  <meta property="og:title" content={metaTitle} />
+  <meta property="og:description" content={metaDescription} />
+  <meta property="og:image" content={metaImage} />
+  <meta property="og:image:alt" content={metaImageAlt} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={metaTitle} />
+  <meta name="twitter:description" content={metaDescription} />
+  <meta name="twitter:image" content={metaImage} />
+  <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
+  <style>
+    @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/space-grotesk-v22-latin-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/space-grotesk-v22-latin-600.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/inter-v20-latin-regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/inter-v20-latin-600.woff2') format('woff2'); }
+
+    /* Dropdown */
+    .nav-dropdown { position: relative; }
+
+    .nav-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      min-width: 600px;
+      padding: 16px;
+      z-index: 200;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .nav-dropdown-menu.open { display: grid !important; }
+    .dropdown-col { display: flex; flex-direction: column; gap: 4px; }
+    .dropdown-parent-link {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--brand-primary);
+      text-decoration: none; padding: 6px 10px;
+      border-radius: 6px; transition: background 0.15s;
+    }
+    .dropdown-parent-link:hover { background: var(--bg-surface-2); }
+    .dropdown-child-link {
+      font-size: 13px; font-weight: 500; color: var(--text-main);
+      text-decoration: none; padding: 5px 10px;
+      border-radius: 6px; transition: background 0.15s, color 0.15s;
+    }
+    .dropdown-child-link:hover { background: var(--bg-surface-2); color: var(--brand-primary); }
+
+    /* Mobile menu */
+    .mobile-cat-toggle { cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .mobile-cat-children { display: none; flex-direction: column; background: var(--bg-surface-2); }
+    .mobile-cat-children.open { display: flex; }
+    .mobile-child-link { padding: 11px var(--container-side-padding) 11px calc(var(--container-side-padding) + 16px); font-size: 13px; color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border-light); }
+    .mobile-child-link:hover { color: var(--brand-primary); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="background:var(--bg-header); border-bottom:1px solid var(--border-light); position:sticky; top:0; z-index:100; padding:2.5px 0;">
+  <nav style="max-width:1180px; margin:auto; padding:0 var(--container-side-padding); height:56px; display:flex; align-items:center; justify-content:space-between;">
+
+    <!-- Logo -->
+    <a href="/" style="flex-shrink:0;">
+      <img src="https://images.androidscroll.com/Androidscroll-Logo.png" alt="AndroidScroll" width="165" height="40" style="max-height:38px; width:auto; display:block;" />
+    </a>
+
+    <!-- Desktop Nav -->
+    <ul class="desktop-nav" style="display:none; list-style:none; margin:0; padding:0; gap:4px; align-items:center; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; width:max-content;">
+
+      <!-- Categories Dropdown -->
+      <li style="position:relative; z-index:10;" id="categories-dropdown">
+        <button id="dd-button" aria-expanded="false" style="position:relative; z-index:20; display:flex; align-items:center; gap:8px; padding:10px 16px; white-space:nowrap; cursor:pointer; background:none; border:none; color:var(--text-main); font-family:var(--font-heading); font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">
+          Categories
+          <svg style="pointer-events:none;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="dd-menu" style="display:none; position:absolute; top:100%; left:0; z-index:30; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.12); width:560px; max-width:90vw; padding:16px; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px;">
+          {navCategories.map((cat: any) => (
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <a href={`/categories/${cat.slug}`} style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--brand-primary); text-decoration:none; padding:6px 10px; border-radius:6px;">{cat.name}</a>
+              {cat.children.map((child: any) => (
+                <a href={`/categories/${cat.slug}/${child.slug}`} style="font-size:13px; font-weight:500; color:var(--text-main); text-decoration:none; padding:5px 10px; border-radius:6px;">{child.name}</a>
+              ))}
+            </div>
+          ))}
+        </div>
+      </li>
+
+      <li><a href="/start-here" style="color:var(--text-main); text-decoration:none; transition:color 0.15s;margin-right:15px">Start Here</a></li>
+      
+      <li><a href="/about-androidscroll" style="color:var(--text-main); text-decoration:none; transition:color 0.15s;">About</a></li>
+    </ul>
+
+    <!-- Right: Search + Hamburger -->
+    <div style="display:flex; align-items:center; gap:12px;">
+      <SearchOverlay posts={posts} />
+      <button id="menu-toggle" aria-label="Toggle menu" style="border:none; background:transparent; cursor:pointer; display:flex; flex-direction:column; gap:5px; padding:4px;">
+        <span style="display:block; width:22px; height:2px; background:var(--text-main);"></span>
+        <span style="display:block; width:22px; height:2px; background:var(--text-main);"></span>
+        <span style="display:block; width:22px; height:2px; background:var(--text-main);"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" style="display:none; flex-direction:column; background:var(--bg-surface); border-top:1px solid var(--border-light); max-height:80vh; overflow-y:auto;">
+    <div style="padding:14px var(--container-side-padding); border-bottom:1px solid var(--border-light);"><a href="/" style="font-size:13px; font-weight:700; text-transform:uppercase; color:var(--text-main); text-decoration:none;">Home</a></div>
+
+    <!-- Mobile Categories -->
+    {navCategories.map((cat: any) => (
+      <div>
+        <div class="mobile-cat-toggle" style="padding:14px var(--container-side-padding); font-size:13px; font-weight:700; text-transform:uppercase; color:var(--text-main); border-bottom:1px solid var(--border-light);" data-cat={cat.slug}>
+          <a href={`/categories/${cat.slug}`} style="color:var(--text-main); text-decoration:none;">{cat.name}</a>
+          {cat.children.length > 0 && <span class="cat-arrow" style="transition:transform 0.2s; margin-left:8px; cursor:pointer;">▾</span>}
+        </div>
+        {cat.children.length > 0 && (
+          <div class="mobile-cat-children" id={`mob-${cat.slug}`}>
+            {cat.children.map((child: any) => (
+              <div style="padding:11px var(--container-side-padding) 11px calc(var(--container-side-padding) + 16px); border-bottom:1px solid var(--border-light);"><a href={`/categories/${cat.slug}/${child.slug}`} style="font-size:13px; color:var(--text-muted); text-decoration:none;">{child.name}</a></div>
+            ))}
+          </div>
+        )}
+      </div>
+    ))}
+
+    <div style="padding:14px var(--container-side-padding); border-bottom:1px solid var(--border-light);"><a href="/start-here" style="font-size:13px; font-weight:700; text-transform:uppercase; color:var(--text-main); text-decoration:none;">Start Here</a></div>
+    <div style="padding:14px var(--container-side-padding);"><a href="/about-androidscroll" style="font-size:13px; font-weight:700; text-transform:uppercase; color:var(--text-main); text-decoration:none;">About</a></div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main style={isSinglePost ? "" : "padding:5px var(--container-side-padding); margin: 40px 0"}>
+  <slot />
+</main>
+
+<!-- FOOTER -->
+<footer style="background:var(--bg-footer)!important; border-top:4px solid var(--brand-primary); padding:48px var(--container-side-padding) 24px; color:#fff;">
+  <div style="max-width:1180px; margin:auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:40px; margin-bottom:40px;">
+
+    <!-- Brand -->
+    <div>
+      <img src="https://images.androidscroll.com/Androidscroll-Logo.png" alt="AndroidScroll" width="140" height="34" style="max-height:34px; width:auto; margin-bottom:14px; filter:brightness(0) invert(1);" />
+      <p style="font-size:13px; line-height:1.7; color:rgba(255,255,255,0.65); margin:0;">Android tips, hidden features, and fixes — written for real users.</p>
+    </div>
+
+    <!-- Quick Links -->
+    <div>
+      <h4 style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--brand-primary); margin:0 0 14px;">Quick Links</h4>
+      <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+        <li><a href="/" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Home</a></li>
+        <li><a href="/start-here" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Start Here</a></li>
+        <li><a href="/about-androidscroll" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">About</a></li>
+        <li><a href="/contact" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Contact</a></li>
+      </ul>
+    </div>
+
+    <!-- Categories -->
+    <div>
+      <h4 style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--brand-primary); margin:0 0 14px;">Categories</h4>
+      <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+        {navCategories.map((cat: any) => (
+          <li><a href={`/categories/${cat.slug}`} style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">{cat.name}</a></li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Legal -->
+    <div>
+      <h4 style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--brand-primary); margin:0 0 14px;">Legal</h4>
+      <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+        <li><a href="/privacy-policy" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Privacy Policy</a></li>
+        <li><a href="/disclaimer" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Disclaimer</a></li>
+        <li><a href="/cookie-policy" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Cookie Policy</a></li>
+        <li><a href="/comments-policy" style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">Comments Policy</a></li>
+      </ul>
+    </div>
+
+  </div>
+  <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; text-align:center; font-size:13px; color:rgba(255,255,255,0.45);">
+    © 2019–{new Date().getFullYear()} AndroidScroll.com — All rights reserved.
+  </div>
+</footer>
+
+<script is:inline>
+  // Desktop vs mobile layout
+  var desktopNav = document.querySelector('.desktop-nav');
+  var menuToggle = document.getElementById('menu-toggle');
+  var mobileMenu = document.getElementById('mobile-menu');
+
+  function applyLayout() {
+    if (window.innerWidth >= 768) {
+      desktopNav.style.display = 'flex';
+      menuToggle.style.display = 'none';
+      mobileMenu.style.display = 'none';
+    } else {
+      desktopNav.style.display = 'none';
+      menuToggle.style.display = 'flex';
+    }
+  }
+  applyLayout();
+  window.addEventListener('resize', applyLayout);
+
+  // Hamburger toggle
+  menuToggle.addEventListener('click', function() {
+    mobileMenu.style.display = mobileMenu.style.display === 'flex' ? 'none' : 'flex';
+  });
+
+  // Dropdown
+  var button = document.getElementById('dd-button');
+  var menu = document.getElementById('dd-menu');
+
+  if (button && menu) {
+    button.addEventListener('click', function(event) {
+      event.stopPropagation();
+      var isOpen = menu.style.display === 'grid';
+      menu.style.display = isOpen ? 'none' : 'grid';
+      button.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    document.addEventListener('click', function(event) {
+      if (menu.style.display === 'grid' && !menu.contains(event.target) && !button.contains(event.target)) {
+        menu.style.display = 'none';
+        button.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && menu.style.display === 'grid') {
+        menu.style.display = 'none';
+        button.setAttribute('aria-expanded', 'false');
+        button.focus();
+      }
+    });
+  }
+
+  // Mobile category accordion
+  document.querySelectorAll('.mobile-cat-toggle').forEach(function(toggle) {
+    toggle.addEventListener('click', function(e) {
+      if (e.target.tagName === 'A') return;
+      var slug = toggle.dataset.cat;
+      var children = document.getElementById('mob-' + slug);
+      var arrow = toggle.querySelector('.cat-arrow');
+      if (children) {
+        children.classList.toggle('open');
+        if (arrow) arrow.style.transform = children.classList.contains('open') ? 'rotate(180deg)' : '';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
