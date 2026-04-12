@@ -12,5 +12,13 @@ export default defineConfig({
   image: {
     domains: ['androidscroll.com', 'images.androidscroll.com'],
   },
-  integrations: [mdx(), sitemap()]
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) =>
+        !page.includes('/live/') &&
+        !page.includes('/search/') &&
+        !page.includes('/subscribe/')
+    })
+  ]
 });

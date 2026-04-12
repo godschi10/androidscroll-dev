@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { getPosts } from '../../lib/wp';
 const wpPosts = await getPosts(12);
 ---
-<Layout title="Live WordPress">
+<Layout noindex={true} title="Live WordPress">
   <div class="max-w-4xl mx-auto px-4 py-12">
     <h1 class="text-4xl font-bold mb-8">Live from WordPress</h1>
     <div class="grid gap-6">

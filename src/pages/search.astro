@@ -13,7 +13,7 @@ const searchData = JSON.stringify(wpPosts.map((p: any) => ({
 })));
 ---
 
-<Layout title="Search">
+<Layout noindex={true} title="Search">
   <div style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
     <h1 style="margin-bottom:24px;">Search</h1>
     <input
