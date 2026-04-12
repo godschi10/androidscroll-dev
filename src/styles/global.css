@@ -555,9 +555,13 @@ p.first-p { margin-top: 0px !important; }
     height: auto;
     display: block;
     object-fit: cover;
-    border-radius: 8px; /* Optional: matches your premium UI */
+    border-radius: var( --radius-main)!important /* Optional: matches your premium UI */
+  overflow: hidden;
 }
-
+.wp-block-image figcaption{
+border-radius: var( --radius-main)!important;
+padding: 10px;
+}
 /* 4. Mobile Responsiveness */
 @media (max-width: 600px) {
     .wp-block-gallery.columns-2 .wp-block-image {
@@ -567,7 +571,9 @@ p.first-p { margin-top: 0px !important; }
 
 
 /*Pre margin*/
-pre{margin: 0 0 40px;}
+pre{margin: 0 0 40px;
+  border:1px solid var(--border-light)!important;
+}
 
 /* ==========================================================================
    10. TABLES
@@ -624,3 +630,10 @@ figure.wp-block-table th img { max-width: 50px !important; width: 100% !importan
   display: inline-block;
   letter-spacing: 0.6px;
 }
+
+
+
+
+
+/*Repated Posts*/
+.related-title{margin:15px 0 20px}
