@@ -1,8 +1,14 @@
 ---
 const { postId } = Astro.props;
+const wpUser = import.meta.env.PUBLIC_WP_USER;
+const wpPass = import.meta.env.PUBLIC_WP_APP_PASS;
 ---
 
-<div id="comments-section" data-post-id={postId}>
+<div id="comments-section" data-post-id={postId} data-user={wpUser} data-pass={wpPass}>
+  <button id="load-comments-btn" style="background:none; border:1.5px solid var(--border-light); padding:10px 20px; border-radius:var(--radius-main); cursor:pointer; font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--brand-primary); margin-bottom:20px;">
+    💬 Load Comments
+  </button>
+  <div id="comments-inner" style="display:none;">
   <div id="comments-loading" class="text-neutral-400 text-sm">Loading comments...</div>
   <div id="comments-list" style="display:none"></div>
   <div id="comments-form" style="display:none">
@@ -21,15 +27,15 @@ const { postId } = Astro.props;
       <p id="form-msg" style="font-size:13px; margin:0;"></p>
     </form>
   </div>
+  </div>
 </div>
 
 <script>
 const section = document.getElementById('comments-section');
 const postId = section?.dataset.postId;
 const API = 'https://androidscroll.com/wp-json/wp/v2';
-const WP_USER = import.meta.env.PUBLIC_WP_USER;
-const WP_APP_PASS = import.meta.env.PUBLIC_WP_APP_PASS;
-const auth = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
+const sec = section?.dataset;
+const auth = 'Basic ' + btoa(`${sec?.user}:${sec?.pass}`);
 
 async function loadComments() {
   const res = await fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`);
@@ -128,7 +134,19 @@ document.getElementById('comment-form')?.addEventListener('submit', async (e) =>
   }
 });
 
-loadComments();
+  // Load on click
+  var loadBtn = document.getElementById('load-comments-btn');
+  var inner = document.getElementById('comments-inner');
+  var loaded = false;
+  if (loadBtn) {
+    loadBtn.addEventListener('click', function() {
+      if (loaded) return;
+      loaded = true;
+      loadBtn.style.display = 'none';
+      inner.style.display = 'block';
+      loadComments();
+    });
+  }
 </script>
 
 <style>

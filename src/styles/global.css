@@ -637,3 +637,11 @@ figure.wp-block-table th img { max-width: 50px !important; width: 100% !importan
 
 /*Repated Posts*/
 .related-title{margin:15px 0 20px}
+/* Post content links */
+.post-content a {
+  text-decoration: underline;
+  color: var(--brand-primary);
+}
+.post-content a:hover {
+  color: var(--brand-hover);
+}
