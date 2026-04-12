@@ -17,7 +17,7 @@ const posts = await getPostsByCategory(cat.id);
 
 <Layout title={decode(cat.name)}>
   <nav class="text-sm mb-4 flex items-center gap-2 text-neutral-500">
-  <a href="/categories" class="text-[#00a88f] hover:underline">All Categories</a>
+  <a href="/category" class="text-[#00a88f] hover:underline">All Categories</a>
   <span>→</span>
   <span class="text-neutral-700 dark:text-neutral-300">{decode(cat.name)}</span>
 </nav>

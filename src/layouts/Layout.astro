@@ -146,9 +146,9 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
         <div id="dd-menu" style="display:none; position:absolute; top:100%; left:0; z-index:30; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.12); width:560px; max-width:90vw; padding:16px; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px;">
           {navCategories.map((cat: any) => (
             <div style="display:flex; flex-direction:column; gap:4px;">
-              <a href={`/categories/${cat.slug}`} style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--brand-primary); text-decoration:none; padding:6px 10px; border-radius:6px;">{cat.name}</a>
+              <a href={`/category/${cat.slug}`} style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--brand-primary); text-decoration:none; padding:6px 10px; border-radius:6px;">{cat.name}</a>
               {cat.children.map((child: any) => (
-                <a href={`/categories/${cat.slug}/${child.slug}`} style="font-size:13px; font-weight:500; color:var(--text-main); text-decoration:none; padding:5px 10px; border-radius:6px;">{child.name}</a>
+                <a href={`/category/${cat.slug}/${child.slug}`} style="font-size:13px; font-weight:500; color:var(--text-main); text-decoration:none; padding:5px 10px; border-radius:6px;">{child.name}</a>
               ))}
             </div>
           ))}
@@ -179,13 +179,13 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
     {navCategories.map((cat: any) => (
       <div>
         <div class="mobile-cat-toggle" style="padding:14px var(--container-side-padding); font-size:13px; font-weight:700; text-transform:uppercase; color:var(--text-main); border-bottom:1px solid var(--border-light);" data-cat={cat.slug}>
-          <a href={`/categories/${cat.slug}`} style="color:var(--text-main); text-decoration:none;">{cat.name}</a>
+          <a href={`/category/${cat.slug}`} style="color:var(--text-main); text-decoration:none;">{cat.name}</a>
           {cat.children.length > 0 && <span class="cat-arrow" style="transition:transform 0.2s; margin-left:8px; cursor:pointer;">▾</span>}
         </div>
         {cat.children.length > 0 && (
           <div class="mobile-cat-children" id={`mob-${cat.slug}`}>
             {cat.children.map((child: any) => (
-              <div style="padding:11px var(--container-side-padding) 11px calc(var(--container-side-padding) + 16px); border-bottom:1px solid var(--border-light);"><a href={`/categories/${cat.slug}/${child.slug}`} style="font-size:13px; color:var(--text-muted); text-decoration:none;">{child.name}</a></div>
+              <div style="padding:11px var(--container-side-padding) 11px calc(var(--container-side-padding) + 16px); border-bottom:1px solid var(--border-light);"><a href={`/category/${cat.slug}/${child.slug}`} style="font-size:13px; color:var(--text-muted); text-decoration:none;">{child.name}</a></div>
             ))}
           </div>
         )}
@@ -228,7 +228,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
       <h4 style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--brand-primary); margin:0 0 14px;">Categories</h4>
       <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
         {navCategories.map((cat: any) => (
-          <li><a href={`/categories/${cat.slug}`} style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">{cat.name}</a></li>
+          <li><a href={`/category/${cat.slug}`} style="color:rgba(255,255,255,0.75); text-decoration:none; font-size:13px;">{cat.name}</a></li>
         ))}
       </ul>
     </div>

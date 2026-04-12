@@ -50,10 +50,10 @@ const related = all
         const full = allCats.find((c: any) => c.id === cat.id);
         if (!full) return null;
         if (full.parent === 0) {
-          return <a href={`/categories/${cat.slug}`}>{decode(cat.name)}</a>;
+          return <a href={`/category/${cat.slug}`}>{decode(cat.name)}</a>;
         } else {
           const parent = allCats.find((c: any) => c.id === full.parent);
-          return <a href={`/categories/${parent?.slug ?? ''}/${cat.slug}`}>{decode(cat.name)}</a>;
+          return <a href={`/category/${parent?.slug ?? ''}/${cat.slug}`}>{decode(cat.name)}</a>;
         }
       })}
     </div>

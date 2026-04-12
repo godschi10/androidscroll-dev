@@ -20,7 +20,7 @@ const categories = parents.map((p: any) => ({
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
     {categories.map((cat: any) => (
       <div class="bg-surface-2 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden shadow-sm">
-        <a href={`/categories/${cat.slug}`} class="block bg-[#00A88F] px-6 py-4 hover:bg-[#008c72] transition-colors">
+        <a href={`/category/${cat.slug}`} class="block bg-[#00A88F] px-6 py-4 hover:bg-[#008c72] transition-colors">
           <h2 class="font-bold" style="color:#fff !important">{ decode(cat.name) }</h2>
         </a>
         {cat.children.length > 0 ? (
@@ -28,7 +28,7 @@ const categories = parents.map((p: any) => ({
             {cat.children.map((child: any) => (
               <li>
                 <a
-                  href={`/categories/${cat.slug}/${child.slug}`}
+                  href={`/category/${cat.slug}/${child.slug}`}
                   class="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 hover:text-[#00A88F] dark:hover:text-[#00A88F] transition-colors text-sm font-medium group"
                 >
                   <span class="text-[#00A88F] group-hover:translate-x-1 transition-transform">→</span>

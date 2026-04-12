@@ -9,7 +9,7 @@ const wpFetch = (url: string) =>
 
 export const getPosts = (n = 100) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`))
 export const getPost = (s: string) => wpFetch(`${API}/posts?slug=${s}&_embed`).then((a: any[]) => a[0])
-export const getCategories = () => cached('categories', () => wpFetch(`${API}/categories?per_page=100&hide_empty=true`))
+export const getCategories = () => cached('category', () => wpFetch(`${API}/categories?per_page=100&hide_empty=true`))
 export const getPostsByCategory = (id: number, n = 100) => wpFetch(`${API}/posts?categories=${id}&per_page=${n}&_embed`)
 export const getCategoryBySlug = (slug: string) => wpFetch(`${API}/categories?slug=${slug}`).then((a: any[]) => a[0])
 

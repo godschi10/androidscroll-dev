@@ -9,5 +9,8 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
   },
+  image: {
+    domains: ['androidscroll.com', 'images.androidscroll.com'],
+  },
   integrations: [mdx(), sitemap()]
 });

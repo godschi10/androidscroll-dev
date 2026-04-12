@@ -25,7 +25,7 @@ const posts = await getPostsByCategory(child.id);
 
 <Layout title={decode(child.name)}>
   <nav class="text-sm mb-6 flex items-center gap-1 flex-wrap text-neutral-500">
-  {parent && <a href={`/categories/${parent.slug}`} class="text-[#00a88f] hover:underline font-medium">{decode(parent.name)}</a>}
+  {parent && <a href={`/category/${parent.slug}`} class="text-[#00a88f] hover:underline font-medium">{decode(parent.name)}</a>}
   {parent && <span class="mx-1">→</span>}
   <span class="text-neutral-700 dark:text-neutral-300 font-medium">{decode(child.name)}</span>
 </nav>
