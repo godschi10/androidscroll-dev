@@ -163,6 +163,6 @@ if(fbEl) fbEl.href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
 if(xEl) xEl.href = `https://x.com/intent/tweet?url=${url}&text=${shareTitle}`;
 if(pinEl) pinEl.href = `https://pinterest.com/pin/create/button/?url=${url}&media=${coverImg}&description=${shareTitle}`;
 if(waEl) waEl.href = `https://wa.me/?text=${shareTitle}%20${url}`;
-const tgEl = document.getElementById('share-telegram'); if(tgEl) tgEl.href = `https://t.me/share/url?url=${url}&text=${shareTitle}`;
+const tgEl = document.getElementById('share-telegram'); if(tgEl) tgEl.setAttribute('href', 'https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(document.title));
 const sb=document.getElementById('native-share-btn');if(sb&&navigator.share){sb.style.display='inline-flex';sb.addEventListener('click',()=>navigator.share({title:document.title,url:location.href}))}
 </script>
