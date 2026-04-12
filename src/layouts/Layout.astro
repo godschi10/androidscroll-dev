@@ -124,6 +124,22 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
     .mobile-child-link { padding: 11px var(--container-side-padding) 11px calc(var(--container-side-padding) + 16px); font-size: 13px; color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border-light); }
     .mobile-child-link:hover { color: var(--brand-primary); }
   </style>
+  <!-- Matomo -->
+  <script is:inline>
+    var _paq = window._paq = window._paq || [];
+    _paq.push(["setExcludedReferrers", ["androidscroll.com","analytics.androidscroll.com"]]);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    _paq.push(['enableHeartBeatTimer', 5]);
+    (function() {
+      var u="//analytics.androidscroll.com/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '1']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+  <!-- End Matomo -->
 </head>
 <body>
 
@@ -319,5 +335,27 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
   });
 </script>
 
+  <!-- Matomo Engagement + Affiliate Tracking -->
+  <script is:inline>
+    var _s35 = false, _s75 = false, _s100 = false;
+    window.addEventListener('scroll', function() {
+      var depth = (window.scrollY + window.innerHeight) / document.body.scrollHeight;
+      if (!_s35 && depth > 0.35) { _paq.push(['trackEvent', 'Engagement', 'Scroll 35%']); _s35 = true; }
+      if (!_s75 && depth > 0.75) { _paq.push(['trackEvent', 'Engagement', 'Scroll 75%']); _s75 = true; }
+      if (!_s100 && depth > 0.99) { _paq.push(['trackEvent', 'Engagement', 'Scroll 100%']); _s100 = true; }
+    });
+
+    document.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (!link) return;
+      var href = link.getAttribute('href') || '';
+      if (href.indexOf('/offer/') === -1) return;
+      var slug = href.replace(/.*\/offer\//, '').replace(/\/$/, '') || href;
+      if (typeof _paq !== 'undefined') {
+        _paq.push(['trackEvent', 'Affiliate', 'Click', slug]);
+      }
+    });
+  </script>
+  <!-- End Matomo Tracking -->
 </body>
 </html>
