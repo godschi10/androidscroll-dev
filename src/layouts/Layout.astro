@@ -32,7 +32,7 @@ const navCategories = parents.map((p: any) => ({
     .map((c: any) => ({ ...c, name: decode(c.name) })),
 }));
 
-const { title, description, cover, coverAlt, type = 'website', rankMathHead = null, noindex = false } = Astro.props;
+const { title, description, cover, coverAlt, type = 'website', rankMathHead = null, noindex = false, commentSchema = null } = Astro.props;
 const siteUrl = 'https://androidscroll.com';
 const siteName = 'AndroidScroll';
 const defaultDescription = 'Android tips, tricks and guides';
@@ -76,6 +76,10 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={metaImage} />
     </>
+  )}
+
+  {commentSchema && (
+    <script type="application/ld+json" set:html={commentSchema} />
   )}
 
   <style>
