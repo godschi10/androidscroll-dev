@@ -51,6 +51,9 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#008f79" />
+  <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
+
   {rankMathHead ? (
     <Fragment set:html={rankMathHead} />
   ) : (
@@ -58,8 +61,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
       <link rel="canonical" href={canonicalURL} />
       <title>{metaTitle}</title>
       <meta name="description" content={metaDescription} />
-      <meta name="theme-color" content="#008f79" />
-  {noindex && <meta name="robots" content="noindex, nofollow" />}
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={canonicalURL} />
       <meta property="og:site_name" content={siteName} />
@@ -73,9 +75,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
       <meta name="twitter:image" content={metaImage} />
     </>
   )}
-  <meta name="theme-color" content="#008f79" />
-  {noindex && <meta name="robots" content="noindex, nofollow" />}
-  <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
+
   <style>
     @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/space-grotesk-v22-latin-700.woff2') format('woff2'); }
     @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/space-grotesk-v22-latin-600.woff2') format('woff2'); }
@@ -124,6 +124,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
     .mobile-child-link { padding: 11px var(--container-side-padding) 11px calc(var(--container-side-padding) + 16px); font-size: 13px; color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border-light); }
     .mobile-child-link:hover { color: var(--brand-primary); }
   </style>
+
   <!-- Matomo -->
   <script is:inline>
     var _paq = window._paq = window._paq || [];
@@ -173,8 +174,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
         </div>
       </li>
 
-      <li><a href="/start-here" style="color:var(--text-main); text-decoration:none; transition:color 0.15s;margin-right:15px">Start Here</a></li>
-      
+      <li><a href="/start-here" style="color:var(--text-main); text-decoration:none; transition:color 0.15s; margin-right:15px;">Start Here</a></li>
       <li><a href="/about-androidscroll" style="color:var(--text-main); text-decoration:none; transition:color 0.15s;">About</a></li>
     </ul>
 
@@ -335,27 +335,28 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
   });
 </script>
 
-  <!-- Matomo Engagement + Affiliate Tracking -->
-  <script is:inline>
-    var _s35 = false, _s75 = false, _s100 = false;
-    window.addEventListener('scroll', function() {
-      var depth = (window.scrollY + window.innerHeight) / document.body.scrollHeight;
-      if (!_s35 && depth > 0.35) { _paq.push(['trackEvent', 'Engagement', 'Scroll 35%']); _s35 = true; }
-      if (!_s75 && depth > 0.75) { _paq.push(['trackEvent', 'Engagement', 'Scroll 75%']); _s75 = true; }
-      if (!_s100 && depth > 0.99) { _paq.push(['trackEvent', 'Engagement', 'Scroll 100%']); _s100 = true; }
-    });
+<!-- Matomo Engagement + Affiliate Tracking -->
+<script is:inline>
+  var _s35 = false, _s75 = false, _s100 = false;
+  window.addEventListener('scroll', function() {
+    var depth = (window.scrollY + window.innerHeight) / document.body.scrollHeight;
+    if (!_s35 && depth > 0.35) { _paq.push(['trackEvent', 'Engagement', 'Scroll 35%']); _s35 = true; }
+    if (!_s75 && depth > 0.75) { _paq.push(['trackEvent', 'Engagement', 'Scroll 75%']); _s75 = true; }
+    if (!_s100 && depth > 0.99) { _paq.push(['trackEvent', 'Engagement', 'Scroll 100%']); _s100 = true; }
+  });
 
-    document.addEventListener('click', function(e) {
-      var link = e.target.closest('a');
-      if (!link) return;
-      var href = link.getAttribute('href') || '';
-      if (href.indexOf('/offer/') === -1) return;
-      var slug = href.replace(/.*\/offer\//, '').replace(/\/$/, '') || href;
-      if (typeof _paq !== 'undefined') {
-        _paq.push(['trackEvent', 'Affiliate', 'Click', slug]);
-      }
-    });
-  </script>
-  <!-- End Matomo Tracking -->
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a');
+    if (!link) return;
+    var href = link.getAttribute('href') || '';
+    if (href.indexOf('/offer/') === -1) return;
+    var slug = href.replace(/.*\/offer\//, '').replace(/\/$/, '') || href;
+    if (typeof _paq !== 'undefined') {
+      _paq.push(['trackEvent', 'Affiliate', 'Click', slug]);
+    }
+  });
+</script>
+<!-- End Matomo Tracking -->
+
 </body>
 </html>
