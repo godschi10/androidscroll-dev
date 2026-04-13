@@ -16,6 +16,8 @@ const allCats = await getCategories();
 const title = decode(post.title.rendered.replace(/<[^>]+>/g,''));
 const description = decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim());
 const cover = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
+const coverAlt = post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || title;
+const authorAvatar = post._embedded?.author?.[0]?.avatar_urls?.['96'] || 'https://images.androidscroll.com/g-will-avatar.jpg';
 const date = new Date(post.date);
 
 // reading time
@@ -28,7 +30,7 @@ let contentHtml = post.content.rendered.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (m, 
   const id = `h2-${i++}`;
   return `<h2 id="${id}"${a}>${t}</h2>`;
 });
-const tocHeadings = [...contentHtml.matchAll(/<h2 id="([^"]*)"[^>]*>(.*?)<\/h2>/gi)].map(m => ({ slug: m[1], text: m[2].replace(/<[^>]+>/g,'') }));
+const tocHeadings = [...contentHtml.matchAll(/<h2 id="([^"]*)"[^>]*>(.*?)<\/h2>/gi)].map(m => ({ slug: m[1], text: decode(m[2].replace(/<[^>]+>/g,'')) }));
 
 // related — same category
 const all = await getPosts(50);
@@ -89,14 +91,14 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   )}
   <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
     <div class="meta-scroll-wrapper"><div class="scrollable-meta">
-      <span class="meta-author-wrapper"><a href="/about-androidscroll"><img src="https://images.androidscroll.com/g-will-avatar.jpg" alt="Gwill Chijioke - AndroidScroll Author" width="28" height="28" /><span>Gwill Chijioke</span></a></span>
+      <span class="meta-author-wrapper"><a href="/about-androidscroll"><img src={authorAvatar} alt="Gwill Chijioke - AndroidScroll Author" width="28" height="28" /><span>Gwill Chijioke</span></a></span>
       <span class="meta-sep">•</span>
       <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
       <span class="meta-sep">•</span>
       <span class="meta-read-time">{readingTime} min read</span>
     </div></div>
 
-    {cover && (<div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;"><img src={cover} alt={title} style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);" /></div>)}
+    {cover && (<div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;"><img src={cover} alt={coverAlt} style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);" /></div>)}
 
     {tocHeadings.length > 2 && (
       <div class="android-scroll-toc toc-collapsed" id="as-toc">
@@ -139,7 +141,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   <div class="custom-author-box">
     <div class="cab-inner">
       <div class="cab-avatar-wrapper">
-        <img class="cab-avatar-img" src="https://images.androidscroll.com/g-will-avatar.jpg" alt="Gwill Chijioke - AndroidScroll Author" width="100" height="100" />
+        <img class="cab-avatar-img" src={authorAvatar} alt="Gwill Chijioke - AndroidScroll Author" width="100" height="100" />
       </div>
       <div class="cab-content">
         <span class="cab-label">Written by</span>
