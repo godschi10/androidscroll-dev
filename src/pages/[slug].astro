@@ -50,7 +50,15 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   "@type": "DiscussionForumPosting",
   "@id": `https://androidscroll.com/${post.slug}/#comments`,
   "url": `https://androidscroll.com/${post.slug}/`,
+  "headline": decode(post.title.rendered.replace(/<[^>]+>/g,'')),
   "name": decode(post.title.rendered.replace(/<[^>]+>/g,'')),
+  "text": decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim()),
+  "datePublished": post.date,
+  "author": {
+    "@type": "Person",
+    "name": "Gwill Chijioke",
+    "url": "https://androidscroll.com/about-androidscroll"
+  },
   "comment": buildComments.map((c: any) => ({
     "@type": "Comment",
     "dateCreated": c.date,
@@ -62,8 +70,8 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   }))
 }) : null;
 ---
-<div class="as-progress-container"><div class="as-progress-bar" id="as-progress-bar"></div></div>
 <Layout title={title} description={description} cover={cover} type="article" rankMathHead={rankMathHead} commentSchema={commentSchema}>
+  <div class="as-progress-container"><div class="as-progress-bar" id="as-progress-bar"></div></div>
   <article style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
     {post._embedded?.['wp:term']?.[0]?.length > 0 && (
     <div class="category_meta">
