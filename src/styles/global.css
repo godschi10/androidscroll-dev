@@ -421,7 +421,7 @@ p.first-p { margin-top: 0px !important; }
   border: 1.5px solid var(--brand-primary) !important;
   border-radius: var(--radius-main);
   padding: 5px 10px;
-  font-size: 0.55em;
+  font-size: 0.575em;
   font-weight: 700;
   text-transform: uppercase;
   text-decoration: none;
@@ -438,7 +438,7 @@ p.first-p { margin-top: 0px !important; }
   border: 1.5px solid var(--brand-primary) !important;
   border-radius: var(--radius-main);
   padding: 6px 5px;
-  font-size: 0.55em;
+  font-size: 0.575em;
   font-weight: 700;
   text-transform: uppercase;
   text-decoration: none;
