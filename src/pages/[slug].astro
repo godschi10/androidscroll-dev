@@ -24,7 +24,7 @@ const date = new Date(post.date);
 const wordCount = post.content.rendered.replace(/<[^>]+>/g,' ').split(/\s+/).length;
 const readingTime = Math.max(1, Math.ceil(wordCount / 238));
 
-// add IDs to H2 r TOC
+// add IDs to H2 for TOC
 let i = 0;
 let contentHtml = post.content.rendered.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (m, a, t) => {
   const id = `h2-${i++}`;
@@ -36,7 +36,7 @@ const tocHeadings = [...contentHtml.matchAll(/<h2 id="([^"]*)"[^>]*>(.*?)<\/h2>/
 const all = await getPosts(50);
 const postCatIds = post._embedded?.['wp:term']?.[0]?.map((t: any) => t.id) || [];
 const related = all
-.filter((p: any) => {
+  .filter((p: any) => {
     if (p.id === post.id) return false;
     const cats = p._embedded?.['wp:term']?.[0]?.map((t: any) => t.id) || [];
     return cats.some((id: number) => postCatIds.includes(id));
@@ -58,7 +58,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   "datePublished": post.date,
   "author": {
     "@type": "Person",
-    "name": "G-will Chijioke",
+    "name": "Gwill Chijioke",
     "url": "https://androidscroll.com/about-androidscroll"
   },
   "comment": buildComments.map((c: any) => ({
@@ -91,7 +91,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   )}
   <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
     <div class="meta-scroll-wrapper"><div class="scrollable-meta">
-      <span class="meta-author-wrapper"><a href="/about-androidscroll"><img src={authorAvatar} alt="G-will Chijioke - AndroidScroll Author" width="28" height="28" /><span>G-will Chijioke</span></a></span>
+      <span class="meta-author-wrapper"><a href="/about-androidscroll"><img src={authorAvatar} alt="Gwill Chijioke - AndroidScroll Author" width="28" height="28" /><span>Gwill Chijioke</span></a></span>
       <span class="meta-sep">•</span>
       <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
       <span class="meta-sep">•</span>
@@ -141,12 +141,13 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   <div class="custom-author-box">
     <div class="cab-inner">
       <div class="cab-avatar-wrapper">
-        <img class="cab-avatar-img" src={authorAvatar} alt="G-will Chijioke - AndroidScroll Author" width="100" height="100" />
+        <img class="cab-avatar-img" src={authorAvatar} alt="Gwill Chijioke - AndroidScroll Author" width="100" height="100" />
       </div>
       <div class="cab-content">
         <span class="cab-label">Written by</span>
-        <h3 class="cab-name">G-will Chijioke</h3>
-        <p class="cab-bio">Android enthusiast and tech writer helping you get the most out of your Android device. Covering tips, fixes, and hidden features since 202r">
+        <h3 class="cab-name">Gwill Chijioke</h3>
+        <p class="cab-bio">Android enthusiast and tech writer helping you get the most out of your Android device. Covering tips, fixes, and hidden features since 2020.</p>
+        <div class="cab-footer">
           <a href="/about-androidscroll" class="cab-more-link">More about the author →</a>
           <div class="cab-socials">
             <a href="https://x.com/gwill_chijioke/" class="cab-social-icon" target="_blank" rel="noopener" aria-label="X/Twitter">
