@@ -98,7 +98,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       <span class="meta-read-time">{readingTime} min read</span>
     </div></div>
 
-    {cover && (<div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;"><img src={cover} alt={coverAlt} style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);" /></div>)}
+    {cover && (<div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;"><img src={cover} alt={coverAlt} id="featured-image" style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);" /></div>)}
 
     {tocHeadings.length > 2 && (
       <div class="android-scroll-toc toc-collapsed" id="as-toc">
@@ -182,7 +182,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   // Social share links
 const url = encodeURIComponent(location.href);
 const shareTitle = encodeURIComponent(document.title);
-const coverImg = encodeURIComponent(document.querySelector('article img')?.src || '');
+const coverImg = encodeURIComponent(document.getElementById('featured-image')?.src || document.querySelector('article img')?.src || '');
 const fbEl = document.getElementById('share-fb');
 const xEl = document.getElementById('share-x');
 const pinEl = document.getElementById('share-pinterest');
