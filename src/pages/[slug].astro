@@ -36,7 +36,7 @@ const tocHeadings = [...contentHtml.matchAll(/<h2 id="([^"]*)"[^>]*>(.*?)<\/h2>/
 const all = await getPosts(50);
 const postCatIds = post._embedded?.['wp:term']?.[0]?.map((t: any) => t.id) || [];
 const related = all
-ilter((p: any) => {
+.filter((p: any) => {
     if (p.id === post.id) return false;
     const cats = p._embedded?.['wp:term']?.[0]?.map((t: any) => t.id) || [];
     return cats.some((id: number) => postCatIds.includes(id));
