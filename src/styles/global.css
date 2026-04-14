@@ -490,7 +490,7 @@ p.first-p { margin-top: 0px !important; }
 /* ==========================================================================
    11. RELATED POSTS
    ========================================================================== */
-.related-title{margin:15px 0 20px}
+.related-title{margin:15px 0 20px !important}
 .related-posts-section { margin-top: 50px; border-top: 1px solid var(--border-light); padding-top: 30px; }
 .related-posts-section h3 { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 25px; color: var(--text-dark); }
 .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
