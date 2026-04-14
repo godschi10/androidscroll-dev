@@ -182,7 +182,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   // Social share links
 const url = encodeURIComponent(location.href);
 const shareTitle = encodeURIComponent(document.title);
-const coverImg = encodeURIComponent(document.querySelector('meta[property="og:image"]')?.content || document.getElementById('featured-image')?.src || '');
+const coverImg = encodeURIComponent(document.getElementById('featured-image')?.src || document.querySelector('article img')?.src || '');
 const fbEl = document.getElementById('share-fb');
 const xEl = document.getElementById('share-x');
 const pinEl = document.getElementById('share-pinterest');
