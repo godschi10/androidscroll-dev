@@ -182,15 +182,14 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   // Social share links
 const url = encodeURIComponent(location.href);
 const shareTitle = encodeURIComponent(document.title);
-const pinterestDesc = encodeURIComponent(document.querySelector('meta[name="description"]')?.content || document.querySelector('h1')?.textContent?.trim() || '');
-const coverImg = encodeURIComponent(document.getElementById('featured-image')?.src || document.querySelector('article img')?.src || '');
+const coverImg = encodeURIComponent(document.querySelector('meta[property="og:image"]')?.content || document.getElementById('featured-image')?.src || '');
 const fbEl = document.getElementById('share-fb');
 const xEl = document.getElementById('share-x');
 const pinEl = document.getElementById('share-pinterest');
 const waEl = document.getElementById('share-whatsapp');
 if(fbEl) fbEl.href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
 if(xEl) xEl.href = `https://x.com/intent/tweet?url=${url}&text=${shareTitle}`;
-if(pinEl) pinEl.href = `https://pinterest.com/pin/create/button/?url=${url}&media=${coverImg}`;
+if(pinEl) pinEl.href = `https://pinterest.com/pin/create/button/?url=${url}&media=${coverImg}&description=${shareTitle}`;
 if(waEl) waEl.href = `https://wa.me/?text=${shareTitle}%20${url}`;
 const thEl = document.getElementById('btn-threads-share'); if(thEl) thEl.href = `https://www.threads.net/intent/post?text=${encodeURIComponent(document.title + ' ' + window.location.href)}`;
 const sb=document.getElementById('native-share-btn');if(sb&&navigator.share){sb.style.display='inline-flex';sb.addEventListener('click',()=>navigator.share({title:document.title,url:location.href}))}
