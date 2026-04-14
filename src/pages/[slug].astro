@@ -55,7 +55,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   "headline": decode(post.title.rendered.replace(/<[^>]+>/g,'')),
   "name": decode(post.title.rendered.replace(/<[^>]+>/g,'')),
   "text": decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim()),
-  "datePublished": post.date,
+  "datePublished": post.date.endsWith('Z') || post.date.includes('+') ? post.date : post.date + '+00:00',
   "author": {
     "@type": "Person",
     "name": "G-will Chijioke",
@@ -63,11 +63,12 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   },
   "comment": buildComments.map((c: any) => ({
     "@type": "Comment",
-    "dateCreated": c.date,
+    "dateCreated": c.date.endsWith('Z') || c.date.includes('+') ? c.date : c.date + '+00:00',
     "text": c.content.rendered.replace(/<[^>]+>/g, '').trim(),
     "author": {
       "@type": "Person",
-      "name": c.author_name
+      "name": c.author_name,
+      "url": c.author_url || "https://androidscroll.com/"
     }
   }))
 }) : null;
