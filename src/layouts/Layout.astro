@@ -135,18 +135,9 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
   <script is:inline>
     var _paq = window._paq = window._paq || [];
     _paq.push(["setExcludedReferrers", ["androidscroll.com","analytics.androidscroll.com"]]);
+    _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
     _paq.push(['enableHeartBeatTimer', 5]);
-
-    function trackAstroPage() {
-      _paq.push(['setCustomUrl', window.location.href]);
-      _paq.push(['setDocumentTitle', document.title]);
-      _paq.push(['trackPageView']);
-    }
-
-    trackAstroPage();
-    document.addEventListener('astro:page-load', trackAstroPage);
-
     (function() {
       var u="//analytics.androidscroll.com/";
       _paq.push(['setTrackerUrl', u+'matomo.php']);
@@ -165,7 +156,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
 
     <!-- Logo -->
     <a href="/" style="flex-shrink:0;">
-      <img src="https://androidscroll.com/wp-content/uploads/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="185" height="40" style="max-height:38px; max-width:200; display:block;" />
+      <img src="https://images.androidscroll.com/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="185" height="40" style="max-height:38px; max-width:200; display:block;" />
     </a>
 
     <!-- Desktop Nav -->
@@ -241,7 +232,7 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
 
     <!-- Brand -->
     <div>
-      <img src="https://androidscroll.com/wp-content/uploads/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="140" height="34" style="max-height:34px; width:auto; margin-bottom:14px; filter:brightness(0) invert(1);" />
+      <img src="https://images.androidscroll.com//2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="140" height="34" style="max-height:34px; width:auto; margin-bottom:14px; filter:brightness(0) invert(1);" />
       <p style="font-size:13px; line-height:1.7; color:rgba(255,255,255,0.65); margin:0;">Android tips, hidden features, and fixes — written for real users.</p>
     </div>
 
@@ -353,12 +344,6 @@ const isSinglePost = pathname !== '/' && pathname.split('/').filter(Boolean).len
 <!-- Matomo Engagement + Affiliate Tracking -->
 <script is:inline>
   var _s35 = false, _s75 = false, _s100 = false;
-
-  function resetEngagementFlags() {
-    _s35 = false; _s75 = false; _s100 = false;
-  }
-  document.addEventListener('astro:after-swap', resetEngagementFlags);
-
   window.addEventListener('scroll', function() {
     var depth = (window.scrollY + window.innerHeight) / document.body.scrollHeight;
     if (!_s35 && depth > 0.35) { _paq.push(['trackEvent', 'Engagement', 'Scroll 35%']); _s35 = true; }
