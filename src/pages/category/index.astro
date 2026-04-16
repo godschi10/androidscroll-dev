@@ -14,7 +14,21 @@ const categories = parents.map((p: any) => ({
 }));
 ---
 
-<Layout title="Categories">
+<Layout 
+  title="Categories"
+  pageSchema={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Categories",
+    "url": "https://androidscroll.com/category",
+    "description": "Browse all Android article categories on AndroidScroll",
+    "publisher": {
+      "@type": "Organization",
+      "name": "AndroidScroll",
+      "url": "https://androidscroll.com"
+    }
+  }}
+>
 <div style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
   <h1 class="text-3xl font-bold mb-10 text-neutral-900 dark:text-neutral-100">Categories</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">

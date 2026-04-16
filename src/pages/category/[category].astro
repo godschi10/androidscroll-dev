@@ -15,7 +15,24 @@ const { cat } = Astro.props;
 const posts = await getPostsByCategory(cat.id);
 ---
 
-<Layout title={decode(cat.name)}>
+<Layout 
+  title={decode(cat.name)}
+  pageSchema={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": decode(cat.name),
+    "url": `https://androidscroll.com/category/${cat.slug}`,
+    "description": `Browse all ${decode(cat.name)} articles on AndroidScroll`,
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://androidscroll.com" },
+        { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://androidscroll.com/category" },
+        { "@type": "ListItem", "position": 3, "name": decode(cat.name), "item": `https://androidscroll.com/category/${cat.slug}` }
+      ]
+    }
+  }}
+>
   <nav class="text-sm mb-4 flex items-center gap-2 text-neutral-500">
   <a href="/category" class="text-[#00a88f] hover:underline">All Categories</a>
   <span>→</span>

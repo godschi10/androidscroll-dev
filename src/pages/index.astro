@@ -24,7 +24,19 @@ const featured = posts[6];
 const recent = posts.slice(0);
 ---
 
-<Layout title="AndroidScroll - Master your mobile device with AndroidScroll. Your daily source for easy-to-follow Android tutorials, hidden features, buying guides, and tech solutions.">
+<Layout title="AndroidScroll - Master your mobile device with AndroidScroll. Your daily source for easy-to-follow Android tutorials, hidden features, buying guides, and tech solutions."
+pageSchema={{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AndroidScroll",
+    "url": "https://androidscroll.com",
+    "description": "Android tips, tricks and guides",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://androidscroll.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }}>
 
   <!-- Featured Post Hero -->
   {featured && (
@@ -88,6 +100,19 @@ const recent = posts.slice(0);
     ))}
   </div>
 
+
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "AndroidScroll",
+  "url": "https://androidscroll.com",
+  "description": "Android tips, tricks and guides",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://androidscroll.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+})} />
 </Layout>
 
 <style>
