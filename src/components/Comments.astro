@@ -1,7 +1,7 @@
 ---
 const { postId } = Astro.props;
-const wpUser = import.meta.env.PUBLIC_WP_USER;
-const wpPass = import.meta.env.PUBLIC_WP_APP_PASS;
+const wpUser = import.meta.env.WP_USER;
+const wpPass = import.meta.env.WP_APP_PASS;
 ---
 
 <div id="comments-section" data-post-id={postId} data-user={wpUser} data-pass={wpPass}>
