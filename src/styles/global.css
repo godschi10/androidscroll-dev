@@ -151,7 +151,7 @@ h2, h3, h4 { scroll-margin-top: 70px; }
 h2[id] { scroll-margin-top: 100px; }
 
 @media (min-width: 769px) {
-  h1 { font-size: 28.5px; }
+  h1 { font-size: 38.5px; }
   h2 { font-size: 35.5px; }
   h3 { font-size: 18.5px; }
   h4 { font-size: 15px; }
