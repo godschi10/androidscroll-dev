@@ -60,7 +60,7 @@ const posts = await getPostsByCategory(child.id);
             ? <div class="w-full h-44 overflow-hidden"><img src={img} alt={title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /></div>
             : <div class="w-full h-2 bg-gradient-to-r from-[#00a88f] to-[#008c72]"></div>
           }
-          <div class="p-5 flex flex-col flex-1">
+          <div class="p-5 flex flex-col flex-1" style="background:var(--bg-surface);">
             <h2 class="font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-[#00a88f] transition-colors leading-snug">{title}</h2>
             <p class="mt-1 text-xs text-neutral-400">{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
             {desc && <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-300 line-clamp-2 flex-1">{desc}</p>}
