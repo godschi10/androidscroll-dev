@@ -23,7 +23,25 @@ const { child, parent } = Astro.props;
 const posts = await getPostsByCategory(child.id);
 ---
 
-<Layout title={decode(child.name)}>
+<Layout 
+  title={decode(child.name)}
+  pageSchema={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": decode(child.name),
+    "url": `https://androidscroll.com/category/${parent?.slug ?? 'uncategorized'}/${child.slug}`,
+    "description": `Browse all ${decode(child.name)} articles on AndroidScroll`,
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://androidscroll.com" },
+        { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://androidscroll.com/category" },
+        { "@type": "ListItem", "position": 3, "name": decode(parent?.name ?? ''), "item": `https://androidscroll.com/category/${parent?.slug ?? ''}` },
+        { "@type": "ListItem", "position": 4, "name": decode(child.name), "item": `https://androidscroll.com/category/${parent?.slug ?? 'uncategorized'}/${child.slug}` }
+      ]
+    }
+  }}
+>
   <nav class="text-sm mb-6 flex items-center gap-1 flex-wrap text-neutral-500">
   {parent && <a href={`/category/${parent.slug}`} class="text-[#00a88f] hover:underline font-medium">{decode(parent.name)}</a>}
   {parent && <span class="mx-1">→</span>}
