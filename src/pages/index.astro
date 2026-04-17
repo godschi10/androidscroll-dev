@@ -140,16 +140,23 @@ const recent   = posts.filter((p: any) => p.id !== FEATURED_POST_ID);
     </div>
   )}
 
-  <!-- ═══ CATEGORY PILLS ═══════════════════════════════════════════ -->
+
+
+  <!-- ═══ LATEST POSTS GRID ════════════════════════════════════════ -->
+  <h2 style="font-family:var(--font-heading); font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dark); margin:0 0 20px; padding-bottom:12px; border-bottom:2px solid var(--brand-primary); display:inline-block;">Latest Posts</h2>
+  
+    <!-- ═══ CATEGORY PILLS ═══════════════════════════════════════════ -->
   <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:36px;" id="cat-pills">
     <button class="cat-pill active" data-cat="all" style="padding:7px 18px; border-radius:20px; background:var(--brand-primary); color:#fff; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border:1.5px solid var(--brand-primary); cursor:pointer;">All</button>
     {parents.map((cat: any) => (
       <button class="cat-pill" data-cat={cat.slug} style="padding:7px 18px; border-radius:20px; background:var(--bg-surface); border:1.5px solid var(--border-light); color:var(--text-main); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; transition:all 0.2s;">{decode(cat.name)}</button>
     ))}
   </div>
-
-  <!-- ═══ LATEST POSTS GRID ════════════════════════════════════════ -->
-  <h2 style="font-family:var(--font-heading); font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dark); margin:0 0 20px; padding-bottom:12px; border-bottom:2px solid var(--brand-primary); display:inline-block;">Latest Posts</h2>
+  
+  
+  
+  
+  
 
   <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:24px; margin-top:20px;">
     {recent.map((post: any) => (
