@@ -17,7 +17,7 @@ const title = decode(post.title.rendered.replace(/<[^>]+>/g,''));
 const description = decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim());
 const cover = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
 const coverAlt = post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || title;
-const authorAvatar = post._embedded?.author?.[0]?.avatar_urls?.['96'] || 'https://www.gravatar.com/avatar/073cce2c2f5f1745ed40a7030de0ee79?s=100';
+const authorAvatar = 'https://www.gravatar.com/avatar/073cce2c2f5f1745ed40a7030de0ee79?s=100';
 const date = new Date(post.date);
 
 // reading time
