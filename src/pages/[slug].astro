@@ -177,6 +177,14 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     <Comments postId={post.id} />
   </div>
   </article>
+
+<style is:global>
+  /* Brand background on comment avatars (robot gravatar has transparent bg) */
+  .comment-author-image img,
+  .comment-list img.avatar,
+  img.avatar {
+background-color: var(--brand-primary);}
+</style>
 </Layout>
 <button id="as-back-to-top" aria-label="Back to top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
 <script>
