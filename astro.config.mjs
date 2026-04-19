@@ -6,6 +6,10 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://androidscroll.com',
+  prefetch: {
+    prefetchAll: false,
+    defaultStrategy: 'hover',
+  },
   build: {
     inlineStylesheets: 'auto',
   },

@@ -87,10 +87,10 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
         const full = allCats.find((c: any) => c.id === cat.id);
         if (!full) return null;
         if (full.parent === 0) {
-          return <a href={`/category/${cat.slug}`}>{decode(cat.name)}</a>;
+          return <a href={`/category/${cat.slug}`} data-astro-prefetch>{decode(cat.name)}</a>;
         } else {
           const parent = allCats.find((c: any) => c.id === full.parent);
-          return <a href={`/category/${parent?.slug ?? ''}/${cat.slug}`}>{decode(cat.name)}</a>;
+          return <a href={`/category/${parent?.slug ?? ''}/${cat.slug}`} data-astro-prefetch>{decode(cat.name)}</a>;
         }
       })}
     </div>
@@ -167,7 +167,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
         <h3 class="cab-name">G-will Chijioke</h3>
         <p class="cab-bio">Android enthusiast and tech writer helping you get the most out of your Android device. Covering tips, fixes, and hidden features since 2020.</p>
         <div class="cab-footer">
-          <a href="/about-androidscroll" class="cab-more-link">More about the author →</a>
+          <a href="/about-androidscroll" class="cab-more-link" data-astro-prefetch>More about the author →</a>
           <div class="cab-socials">
             <a href="https://x.com/gwill_chijioke/" class="cab-social-icon" target="_blank" rel="noopener" aria-label="X/Twitter">
               <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -183,7 +183,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
 
     {related.length > 0 && (
       <div class="related-posts-section"><h3>Related Posts</h3><div class="related-grid">
-        {related.map(r => (<div class="related-card"><a href={`/${r.slug}/`}><div class="related-thumb">{r._embedded?.['wp:featuredmedia']?.[0] && <img src={r._embedded['wp:featuredmedia'][0].source_url} alt={r.title.rendered.replace(/<[^>]+>/g,'')} loading="lazy" />}</div><p class="related-title" set:html={r.title.rendered}></p></a></div>))}
+        {related.map(r => (<div class="related-card"><a href={`/${r.slug}/`} data-astro-prefetch><div class="related-thumb">{r._embedded?.['wp:featuredmedia']?.[0] && <img src={r._embedded['wp:featuredmedia'][0].source_url} alt={r.title.rendered.replace(/<[^>]+>/g,'')} loading="lazy" />}</div><p class="related-title" set:html={r.title.rendered}></p></a></div>))}
       </div></div>
     )}
 
