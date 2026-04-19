@@ -6,6 +6,9 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://androidscroll.com',
+  build: {
+    inlineStylesheets: 'auto',
+  },
   vite: {
     plugins: [tailwindcss()]
   },

@@ -17,7 +17,9 @@ const allCats = await getCategories();
 const title = decode(post.title.rendered.replace(/<[^>]+>/g,''));
 const description = decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim());
 const cover = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
-const coverAlt = post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || title;
+const coverAlt    = post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || title;
+const coverWidth  = post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.width  || null;
+const coverHeight = post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.height || null;
 const AUTHOR_EMAIL  = 'godschi10@gmail.com';
 const gravatarHash  = createHash('md5').update(AUTHOR_EMAIL.trim().toLowerCase()).digest('hex');
 const authorAvatar  = `https://www.gravatar.com/avatar/${gravatarHash}?s=100`;
@@ -102,7 +104,20 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       <span class="meta-read-time">{readingTime} min read</span>
     </div></div>
 
-    {cover && (<div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;"><img src={cover} alt={coverAlt} id="featured-image" style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);" /></div>)}
+    {cover && (
+      <div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;">
+        <img
+          src={cover}
+          alt={coverAlt}
+          id="featured-image"
+          fetchpriority="high"
+          loading="eager"
+          width={coverWidth ?? undefined}
+          height={coverHeight ?? undefined}
+          style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);"
+        />
+      </div>
+    )}
 
     {tocHeadings.length > 2 && (
       <div class="android-scroll-toc toc-collapsed" id="as-toc" style="margin-bottom:30px; margin-top:0px;">
@@ -183,18 +198,20 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   const pb = document.getElementById('as-progress-bar'); if(pb){window.addEventListener('scroll',()=>{const t=window.scrollY;const h=document.documentElement.scrollHeight-window.innerHeight;pb.style.width=(h>0?t/h*100:0)+'%'})}
   const btt=document.getElementById('as-back-to-top');if(btt){window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>600));btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}
   const toc=document.getElementById('as-toc');const th=document.getElementById('toc-header');if(toc&&th){if(localStorage.getItem('toc-open')==='true')toc.classList.remove('toc-collapsed');th.addEventListener('click',()=>{toc.classList.toggle('toc-collapsed');localStorage.setItem('toc-open',!toc.classList.contains('toc-collapsed'))})}
-  // Social share links
-const url = encodeURIComponent(location.href);
-const shareTitle = encodeURIComponent(document.title);
-const coverImg = encodeURIComponent(document.getElementById('featured-image')?.src || document.querySelector('article img')?.src || '');
-const fbEl = document.getElementById('share-fb');
-const xEl = document.getElementById('share-x');
-const pinEl = document.getElementById('share-pinterest');
-const waEl = document.getElementById('share-whatsapp');
-if(fbEl) fbEl.href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-if(xEl) xEl.href = `https://x.com/intent/tweet?url=${url}&text=${shareTitle}`;
-if(pinEl) pinEl.href = `https://pinterest.com/pin/create/button/?url=${url}&media=${coverImg}&description=${shareTitle}`;
-if(waEl) waEl.href = `https://wa.me/?text=${shareTitle}%20${url}`;
-const thEl = document.getElementById('btn-threads-share'); if(thEl) thEl.href = `https://www.threads.net/intent/post?text=${encodeURIComponent(document.title + ' ' + window.location.href)}`;
-const sb=document.getElementById('native-share-btn');if(sb&&navigator.share){sb.style.display='inline-flex';sb.addEventListener('click',()=>navigator.share({title:document.title,url:location.href}))}
+  // Social share links — deferred to avoid forced reflow during initial paint
+  requestAnimationFrame(() => {
+    const url = encodeURIComponent(location.href);
+    const shareTitle = encodeURIComponent(document.title);
+    const coverImg = encodeURIComponent(document.getElementById('featured-image')?.src || document.querySelector('article img')?.src || '');
+    const fbEl = document.getElementById('share-fb');
+    const xEl = document.getElementById('share-x');
+    const pinEl = document.getElementById('share-pinterest');
+    const waEl = document.getElementById('share-whatsapp');
+    if(fbEl) fbEl.href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    if(xEl) xEl.href = `https://x.com/intent/tweet?url=${url}&text=${shareTitle}`;
+    if(pinEl) pinEl.href = `https://pinterest.com/pin/create/button/?url=${url}&media=${coverImg}&description=${shareTitle}`;
+    if(waEl) waEl.href = `https://wa.me/?text=${shareTitle}%20${url}`;
+    const thEl = document.getElementById('btn-threads-share'); if(thEl) thEl.href = `https://www.threads.net/intent/post?text=${encodeURIComponent(document.title + ' ' + window.location.href)}`;
+    const sb=document.getElementById('native-share-btn');if(sb&&navigator.share){sb.style.display='inline-flex';sb.addEventListener('click',()=>navigator.share({title:document.title,url:location.href}))}
+  });
 </script>
