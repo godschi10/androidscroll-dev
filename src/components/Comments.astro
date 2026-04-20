@@ -1,10 +1,8 @@
 ---
 const { postId } = Astro.props;
-const wpUser = import.meta.env.WP_USER;
-const wpPass = import.meta.env.WP_APP_PASS;
 ---
 
-<div id="comments-section" data-post-id={postId} data-user={wpUser} data-pass={wpPass}>
+<div id="comments-section" data-post-id={postId}>
   <button id="load-comments-btn" style="background:none; border:1.5px solid var(--border-light); padding:10px 20px; border-radius:var(--radius-main); cursor:pointer; font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--brand-primary); margin-bottom:20px;">
     💬 Load Comments
   </button>
@@ -34,8 +32,7 @@ const wpPass = import.meta.env.WP_APP_PASS;
 const section = document.getElementById('comments-section');
 const postId = section?.dataset.postId;
 const API = 'https://androidscroll.com/wp-json/wp/v2';
-const sec = section?.dataset;
-const auth = 'Basic ' + btoa(`${sec?.user}:${sec?.pass}`);
+const WORKER = 'https://androidscroll-comments.gwill.workers.dev';
 
 async function loadComments() {
   const res = await fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`);
@@ -54,7 +51,6 @@ async function loadComments() {
     return;
   }
 
-  // Build tree
   const top = comments.filter((c: any) => c.parent === 0);
   const replies = comments.filter((c: any) => c.parent !== 0);
 
@@ -82,7 +78,6 @@ async function loadComments() {
 
   list.innerHTML = `<h3 style="font-size:1.1rem; font-weight:800; margin-bottom:20px;">${comments.length} Comment${comments.length !== 1 ? 's' : ''}</h3>` + top.map((c: any) => renderComment(c)).join('');
 
-  // Reply buttons
   list.querySelectorAll('.reply-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = (btn as HTMLElement).dataset.id;
@@ -99,14 +94,12 @@ async function loadComments() {
   });
 }
 
-// Cancel reply
 document.getElementById('cancel-reply')?.addEventListener('click', () => {
   (document.getElementById('c-parent') as HTMLInputElement).value = '0';
   const indicator = document.getElementById('reply-indicator');
   if (indicator) indicator.style.display = 'none';
 });
 
-// Submit comment
 document.getElementById('comment-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = (document.getElementById('c-name') as HTMLInputElement).value;
@@ -117,10 +110,10 @@ document.getElementById('comment-form')?.addEventListener('submit', async (e) =>
 
   if (msg) { msg.textContent = 'Posting...'; msg.style.color = 'var(--text-muted)'; }
 
-  const res = await fetch(`${API}/comments`, {
+  const res = await fetch(WORKER, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: auth },
-    body: JSON.stringify({ post: Number(postId), author_name: name, author_email: email, content, parent: Number(parent) })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ postId, name, email, content, parent })
   });
 
   if (res.ok) {
@@ -136,19 +129,18 @@ document.getElementById('comment-form')?.addEventListener('submit', async (e) =>
   }
 });
 
-  // Load on click
-  var loadBtn = document.getElementById('load-comments-btn');
-  var inner = document.getElementById('comments-inner');
-  var loaded = false;
-  if (loadBtn) {
-    loadBtn.addEventListener('click', function() {
-      if (loaded) return;
-      loaded = true;
-      loadBtn.style.display = 'none';
-      inner.style.display = 'block';
-      loadComments();
-    });
-  }
+var loadBtn = document.getElementById('load-comments-btn');
+var inner = document.getElementById('comments-inner');
+var loaded = false;
+if (loadBtn) {
+  loadBtn.addEventListener('click', function() {
+    if (loaded) return;
+    loaded = true;
+    loadBtn.style.display = 'none';
+    inner.style.display = 'block';
+    loadComments();
+  });
+}
 </script>
 
 <style is:global>
