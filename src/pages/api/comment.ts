@@ -1,11 +1,13 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ request }) => {
   const { postId, name, email, content, parent } = await request.json();
 
-  const auth = 'Basic ' + Buffer.from(
+  const auth = 'Basic ' + btoa(
     `${import.meta.env.WP_USER}:${import.meta.env.WP_APP_PASS}`
-  ).toString('base64');
+  );
 
   const res = await fetch('https://androidscroll.com/wp-json/wp/v2/comments', {
     method: 'POST',
