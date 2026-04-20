@@ -3,29 +3,22 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
   site: 'https://androidscroll.com',
-  adapter: cloudflare(),
-
   prefetch: {
     prefetchAll: false,
     defaultStrategy: 'hover',
   },
-
   build: {
     inlineStylesheets: 'auto',
   },
-
   vite: {
     plugins: [tailwindcss()]
   },
-
   image: {
     domains: ['androidscroll.com', 'images.androidscroll.com'],
   },
-
   integrations: [
     mdx(),
     sitemap({
@@ -34,5 +27,5 @@ export default defineConfig({
         !page.includes('/search/') &&
         !page.includes('/subscribe/')
     })
-  ],
+  ]
 });

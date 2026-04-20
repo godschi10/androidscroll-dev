@@ -1,8 +1,10 @@
 ---
 const { postId } = Astro.props;
+const wpUser = import.meta.env.WP_USER;
+const wpPass = import.meta.env.WP_APP_PASS;
 ---
 
-<div id="comments-section" data-post-id={postId}>
+<div id="comments-section" data-post-id={postId} data-user={wpUser} data-pass={wpPass}>
   <button id="load-comments-btn" style="background:none; border:1.5px solid var(--border-light); padding:10px 20px; border-radius:var(--radius-main); cursor:pointer; font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--brand-primary); margin-bottom:20px;">
     💬 Load Comments
   </button>
@@ -32,6 +34,8 @@ const { postId } = Astro.props;
 const section = document.getElementById('comments-section');
 const postId = section?.dataset.postId;
 const API = 'https://androidscroll.com/wp-json/wp/v2';
+const sec = section?.dataset;
+const auth = 'Basic ' + btoa(`${sec?.user}:${sec?.pass}`);
 
 async function loadComments() {
   const res = await fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`);
@@ -113,10 +117,10 @@ document.getElementById('comment-form')?.addEventListener('submit', async (e) =>
 
   if (msg) { msg.textContent = 'Posting...'; msg.style.color = 'var(--text-muted)'; }
 
-  const res = await fetch('/api/comment', {
+  const res = await fetch(`${API}/comments`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ postId, name, email, content, parent })
+    headers: { 'Content-Type': 'application/json', Authorization: auth },
+    body: JSON.stringify({ post: Number(postId), author_name: name, author_email: email, content, parent: Number(parent) })
   });
 
   if (res.ok) {

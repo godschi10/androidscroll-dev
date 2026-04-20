@@ -4,33 +4,14 @@ const WP_USER = import.meta.env.WP_USER
 const WP_APP_PASS = import.meta.env.WP_APP_PASS
 
 const authHeader = "Basic " + btoa(`${WP_USER}:${WP_APP_PASS}`)
+const wpFetch = (url: string) =>
+  fetch(url, { headers: { Authorization: authHeader } }).then(r => r.json())
 
-const wpFetch = async (url: string) => {
-  const res = await fetch(url, { headers: { Authorization: authHeader } });
-  if (!res.ok) {
-    console.error(`WP API error: ${res.status} ${url}`);
-    return null;
-  }
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    console.error(`WP API non-JSON from ${url}:`, text.slice(0, 200));
-    return null;
-  }
-};
-
-export const getPosts = (n = 100) => cached(`posts-${n}`, async () => {
-  const data = await wpFetch(`${API}/posts?per_page=${n}&_embed`);
-  return data ?? [];
-})
-export const getPost = (s: string) => wpFetch(`${API}/posts?slug=${s}&_embed`).then((a: any[]) => a?.[0])
-export const getCategories = () => cached('category', async () => {
-  const data = await wpFetch(`${API}/categories?per_page=100&hide_empty=true`);
-  return data ?? [];
-})
+export const getPosts = (n = 100) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`))
+export const getPost = (s: string) => wpFetch(`${API}/posts?slug=${s}&_embed`).then((a: any[]) => a[0])
+export const getCategories = () => cached('category', () => wpFetch(`${API}/categories?per_page=100&hide_empty=true`))
 export const getPostsByCategory = (id: number, n = 100) => wpFetch(`${API}/posts?categories=${id}&per_page=${n}&_embed`)
-export const getCategoryBySlug = (slug: string) => wpFetch(`${API}/categories?slug=${slug}`).then((a: any[]) => a?.[0])
+export const getCategoryBySlug = (slug: string) => wpFetch(`${API}/categories?slug=${slug}`).then((a: any[]) => a[0])
 
 const _decode = (str: string) =>
   str.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
@@ -53,27 +34,18 @@ export const excerpt = (html: string, words = 30) =>
 
 export const decode = (str: string) => _decode(_decode(str))
 
-export const getPages = () => cached('pages', async () => {
-  const data = await wpFetch(`${API}/pages?per_page=100`);
-  return data ?? [];
-})
+export const getPages = () => cached('pages', () => wpFetch(`${API}/pages?per_page=100`))
 
 export const getPage = (slug: string) =>
-  wpFetch(`${API}/pages?slug=${slug}`).then((a: any[]) => a?.[0])
+  wpFetch(`${API}/pages?slug=${slug}`).then((a: any[]) => a[0])
 
 export const getPostSeo = async (slug: string) => {
+  // RankMath exposes SEO data via custom endpoint if REST API is enabled
   const res = await wpFetch(`${API}/posts?slug=${slug}&_fields=id,slug,yoast_head_json,rank_math_head`)
-  return res?.[0] ?? null
+  return res[0] ?? null
 }
 
-export const getRankMathHead = async (slug: string) => {
-  try {
-    const res = await fetch(`https://androidscroll.com/wp-json/rankmath/v1/getHead?url=https://androidscroll.com/${slug}/`);
-    if (!res.ok) return null;
-    const text = await res.text();
-    const d = JSON.parse(text);
-    return d.success ? d.head : null;
-  } catch {
-    return null;
-  }
-}
+export const getRankMathHead = (slug: string) =>
+  fetch(`https://androidscroll.com/wp-json/rankmath/v1/getHead?url=https://androidscroll.com/${slug}/`)
+    .then(r => r.json())
+    .then(d => d.success ? d.head : null)
