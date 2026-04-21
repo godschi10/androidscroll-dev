@@ -48,6 +48,18 @@ const related = all
   })
   .slice(0, 3);
 
+// FIX: Validate author_url from comment submitters — prevent JSON-LD injection
+const safeAuthorUrl = (url: string | undefined): string => {
+  if (!url) return 'https://androidscroll.com/';
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return 'https://androidscroll.com/';
+    return url;
+  } catch {
+    return 'https://androidscroll.com/';
+  }
+};
+
 // Fetch comments at build time for schema (UI still lazy-loads via Comments.astro)
 const commentsRes = await fetch(`https://androidscroll.com/wp-json/wp/v2/comments?post=${post.id}&per_page=100&orderby=date&order=asc`).catch(() => null);
 const buildComments = commentsRes?.ok ? await commentsRes.json().catch(() => []) : [];
@@ -73,7 +85,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     "author": {
       "@type": "Person",
       "name": c.author_name,
-      "url": c.author_url || "https://androidscroll.com/"
+      "url": safeAuthorUrl(c.author_url)
     }
   }))
 }) : null;

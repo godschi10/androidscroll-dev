@@ -96,6 +96,17 @@ const searchData = JSON.stringify(posts.map(p => ({
 </div>
 
 <script define:vars={{ searchData }}>
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+  function safeUrl(url) {
+    if (!url) return '';
+    if (/^\s*(javascript|data|vbscript):/i.test(url)) return '#';
+    return url;
+  }
   const data = JSON.parse(searchData);
   const overlay = document.getElementById('search-overlay');
   const input = document.getElementById('search-overlay-input');
@@ -150,21 +161,14 @@ const searchData = JSON.stringify(posts.map(p => ({
     viewAll.href = `/search?q=${encodeURIComponent(q)}`;
 
     grid.innerHTML = found.slice(0, 6).map(r => `
-      <a href="${r.url}" style="
-        display:flex; flex-direction:column;
-        background:var(--bg-surface);
-        border:1px solid var(--border-light);
-        border-radius:var(--radius-main);
-        overflow:hidden; text-decoration:none;
-        transition:border-color 0.18s, transform 0.18s;
-      ">
+      <a href="${esc(safeUrl(r.url))}" style="display:flex; flex-direction:column; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:var(--radius-main); overflow:hidden; text-decoration:none; transition:border-color 0.18s, transform 0.18s;">
         ${r.cover ? `
         <div style="width:100%; aspect-ratio:16/9; overflow:hidden; background:var(--bg-surface-2);">
-          <img src="${r.cover}" alt="${r.title}" style="width:100%; height:100%; object-fit:cover; display:block;" loading="lazy">
+          <img src="${esc(safeUrl(r.cover))}" alt="${esc(r.title)}" style="width:100%; height:100%; object-fit:cover; display:block;" loading="lazy">
         </div>` : ''}
         <div style="padding:9px 10px 10px; flex:1;">
-          ${r.categories[0] ? `<span style="font-family:var(--font-heading); font-size:9px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--brand-primary);">${r.categories[0].replace(/-/g,' ')}</span>` : ''}
-          <p style="font-family:var(--font-heading); font-size:13px; font-weight:600; color:var(--text-dark); line-height:1.4; margin:4px 0 0;">${r.title}</p>
+          ${r.categories[0] ? `<span style="font-family:var(--font-heading); font-size:9px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--brand-primary);">${esc(r.categories[0].replace(/-/g,' '))}</span>` : ''}
+          <p style="font-family:var(--font-heading); font-size:13px; font-weight:600; color:var(--text-dark); line-height:1.4; margin:4px 0 0;">${esc(r.title)}</p>
         </div>
       </a>
     `).join('');

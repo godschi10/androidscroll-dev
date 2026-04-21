@@ -26,3 +26,10 @@ public/images/
 .env
 dist.zip
 dist/
+
+# Termux workflow artifacts
+.envecho
+cd
+
+# Remove npm lockfile — project uses pnpm exclusively
+package-lock.json

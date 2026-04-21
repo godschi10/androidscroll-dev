@@ -10,6 +10,7 @@ const searchData = JSON.stringify(wpPosts.map((p: any) => ({
   url: `/${p.slug}/`,
   cover: p._embedded?.['wp:featuredmedia']?.[0]?.source_url || '',
   date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+  categories: p._embedded?.['wp:term']?.[0]?.map((t: any) => t.slug) || [],
 })));
 ---
 
@@ -26,7 +27,7 @@ const searchData = JSON.stringify(wpPosts.map((p: any) => ({
     <div id="search-results" style="margin-top:16px; display:flex; flex-direction:column; gap:12px;"></div>
     <div id="all-posts" style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
       {wpPosts.map((p: any) => {
-        const img = p._embedded?.['wp:featuredmedia']?.[0]?.source_url;
+        const img   = p._embedded?.['wp:featuredmedia']?.[0]?.source_url;
         const title = decode(p.title.rendered.replace(/<[^>]+>/g,''));
         return (
           <a href={`/${p.slug}/`} style="display:flex; gap:14px; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:var(--radius-main); padding:14px; text-decoration:none; transition:border-color 0.2s;">
@@ -47,11 +48,23 @@ const searchData = JSON.stringify(wpPosts.map((p: any) => ({
 </Layout>
 
 <script define:vars={{ searchData }}>
-  const allData = JSON.parse(searchData);
-  const input = document.getElementById('search-input');
-  const results = document.getElementById('search-results');
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+  function safeUrl(url) {
+    if (!url) return '';
+    if (/^\s*(javascript|data|vbscript):/i.test(url)) return '#';
+    return url;
+  }
+
+  const allData  = JSON.parse(searchData);
+  const input    = document.getElementById('search-input');
+  const results  = document.getElementById('search-results');
   const allPosts = document.getElementById('all-posts');
-  const count = document.getElementById('search-count');
+  const count    = document.getElementById('search-count');
 
   function runSearch(query) {
     if (!query) {
@@ -66,18 +79,21 @@ const searchData = JSON.stringify(wpPosts.map((p: any) => ({
       p.title.toLowerCase().includes(q) ||
       p.description.toLowerCase().includes(q)
     );
+
     count.textContent = `${found.length} result${found.length !== 1 ? 's' : ''} for "${query}"`;
+
     if (!found.length) {
-      results.innerHTML = `<p style="color:var(--text-muted);">No results found for "<strong>${query}</strong>"</p>`;
+      results.innerHTML = `<p style="color:var(--text-muted);">No results found for "<strong>${esc(query)}</strong>"</p>`;
       return;
     }
+
     results.innerHTML = found.map(r => `
-      <a href="${r.url}" style="display:flex; gap:14px; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:var(--radius-main); padding:14px; text-decoration:none; transition:border-color 0.2s;">
-        ${r.cover ? `<div style="width:90px; height:70px; flex-shrink:0; border-radius:var(--radius-main); overflow:hidden;"><img src="${r.cover}" alt="${r.title}" style="width:100%; height:100%; object-fit:cover;" loading="lazy"></div>` : ''}
+      <a href="${esc(safeUrl(r.url))}" style="display:flex; gap:14px; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:var(--radius-main); padding:14px; text-decoration:none; transition:border-color 0.2s;">
+        ${r.cover ? `<div style="width:90px; height:70px; flex-shrink:0; border-radius:var(--radius-main); overflow:hidden;"><img src="${esc(safeUrl(r.cover))}" alt="${esc(r.title)}" style="width:100%; height:100%; object-fit:cover;" loading="lazy"></div>` : ''}
         <div style="flex:1; min-width:0;">
-          <p style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--text-dark); line-height:1.4; margin:0 0 6px;">${r.title}</p>
-          <p style="font-size:12px; color:var(--text-muted); margin:0;">${r.date}</p>
-          ${r.description ? `<p style="font-size:13px; color:var(--text-muted); margin:4px 0 0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${r.description}</p>` : ''}
+          <p style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--text-dark); line-height:1.4; margin:0 0 6px;">${esc(r.title)}</p>
+          <p style="font-size:12px; color:var(--text-muted); margin:0;">${esc(r.date)}</p>
+          ${r.description ? `<p style="font-size:13px; color:var(--text-muted); margin:4px 0 0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${esc(r.description)}</p>` : ''}
         </div>
       </a>
     `).join('');

@@ -7,86 +7,165 @@ const { postId } = Astro.props;
     💬 Load Comments
   </button>
   <div id="comments-inner" style="display:none;">
-  <div id="comments-loading" class="text-neutral-400 text-sm">Loading comments...</div>
-  <div id="comments-list" style="display:none"></div>
-  <div id="comments-form" style="display:none">
-    <h3 style="font-size:1.1rem; font-weight:800; margin:30px 0 16px;">Leave a Comment</h3>
-    <form id="comment-form" style="display:flex; flex-direction:column; gap:12px;">
-      <div class="comment-form-grid">
-        <input id="c-name" type="text" placeholder="Name *" required style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main);" />
-        <input id="c-email" type="email" placeholder="Email *" required style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main);" />
-      </div>
-      <textarea id="c-content" placeholder="Write a comment..." required rows="4" style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main); resize:vertical;"></textarea>
-      <input id="c-parent" type="hidden" value="0" />
-      <div id="reply-indicator" style="display:none; font-size:13px; color:var(--brand-primary);">
-        Replying to <strong id="reply-name">​</strong> <button type="button" id="cancel-reply" style="margin-left:8px; background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:12px;">✕ Cancel</button>
-      </div>
-      <button type="submit" style="align-self:flex-start; padding:10px 24px; background:var(--brand-primary); color:#fff; font-weight:700; border:none; border-radius:var(--radius-main); cursor:pointer; font-family:var(--font-body); font-size:14px;">Post Comment</button>
-      <p id="form-msg" style="font-size:13px; margin:0;"></p>
-    </form>
-  </div>
+    <div id="comments-loading" class="text-neutral-400 text-sm">Loading comments...</div>
+    <div id="comments-list" style="display:none"></div>
+    <div id="comments-form" style="display:none">
+      <h3 style="font-size:1.1rem; font-weight:800; margin:30px 0 16px;">Leave a Comment</h3>
+      <form id="comment-form" style="display:flex; flex-direction:column; gap:12px;">
+        <div class="comment-form-grid">
+          <input id="c-name" type="text" placeholder="Name *" required maxlength="100" style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main);" />
+          <input id="c-email" type="email" placeholder="Email *" required maxlength="254" style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main);" />
+        </div>
+        <textarea id="c-content" placeholder="Write a comment..." required rows="4" maxlength="5000" style="padding:10px 14px; border:1.5px solid var(--border-light); border-radius:var(--radius-main); font-family:var(--font-body); font-size:14px; background:var(--bg-surface); color:var(--text-main); resize:vertical;"></textarea>
+        <input id="c-parent" type="hidden" value="0" />
+        <div id="reply-indicator" style="display:none; font-size:13px; color:var(--brand-primary);">
+          Replying to <strong id="reply-name">​</strong> <button type="button" id="cancel-reply" style="margin-left:8px; background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:12px;">✕ Cancel</button>
+        </div>
+        <button type="submit" style="align-self:flex-start; padding:10px 24px; background:var(--brand-primary); color:#fff; font-weight:700; border:none; border-radius:var(--radius-main); cursor:pointer; font-family:var(--font-body); font-size:14px;">Post Comment</button>
+        <p id="form-msg" style="font-size:13px; margin:0;"></p>
+      </form>
+    </div>
   </div>
 </div>
 
 <script>
-const section = document.getElementById('comments-section');
-const postId = section?.dataset.postId;
-const API = 'https://androidscroll.com/wp-json/wp/v2';
-const WORKER = 'https://androidscroll-comments.gwill.workers.dev';
+const ALLOWED_COMMENT_TAGS = new Set([
+  'a','b','strong','i','em','u','s','p','br','ul','ol','li',
+  'blockquote','pre','code','span','del','ins'
+]);
+
+const ALLOWED_COMMENT_ATTRS: Record<string, Set<string>> = {
+  'a':   new Set(['href', 'title', 'rel', 'target']),
+  '*':   new Set(['class']),
+};
+
+function sanitizeCommentHtml(html: string): string {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  sanitizeNode(tpl.content);
+  return tpl.innerHTML;
+}
+
+function sanitizeNode(node: Node): void {
+  const remove: Node[] = [];
+  node.childNodes.forEach(child => {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      const el = child as Element;
+      const tag = el.tagName.toLowerCase();
+      if (!ALLOWED_COMMENT_TAGS.has(tag)) {
+        node.insertBefore(document.createTextNode(el.textContent || ''), child);
+        remove.push(child);
+        return;
+      }
+      const drop: string[] = [];
+      for (const attr of Array.from(el.attributes)) {
+        const n = attr.name.toLowerCase();
+        const tagAllowed  = ALLOWED_COMMENT_ATTRS[tag] ?? new Set<string>();
+        const globAllowed = ALLOWED_COMMENT_ATTRS['*'] ?? new Set<string>();
+        if (!tagAllowed.has(n) && !globAllowed.has(n)) { drop.push(attr.name); continue; }
+        if (/^on/i.test(n)) { drop.push(attr.name); continue; }
+        if (n === 'href' && /^\s*(javascript|data|vbscript):/i.test(attr.value)) {
+          drop.push(attr.name); continue;
+        }
+      }
+      drop.forEach(a => el.removeAttribute(a));
+      if (tag === 'a') {
+        el.setAttribute('rel', 'noopener noreferrer nofollow');
+        el.setAttribute('target', '_blank');
+      }
+      sanitizeNode(el);
+    } else if (child.nodeType === Node.COMMENT_NODE) {
+      remove.push(child);
+    }
+  });
+  remove.forEach(n => node.removeChild(n));
+}
+
+function esc(str: string): string {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function safeUrl(url: string): string {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return '';
+    return url;
+  } catch { return ''; }
+}
+
+const section  = document.getElementById('comments-section');
+const postId   = section?.dataset.postId;
+const API      = 'https://androidscroll.com/wp-json/wp/v2';
+const WORKER   = 'https://androidscroll-comments.gwill.workers.dev';
 
 async function loadComments() {
-  const res = await fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`);
+  const res = await fetch(`${API}/comments?post=${encodeURIComponent(postId!)}&per_page=100&orderby=date&order=asc`);
+  if (!res.ok) return;
   const comments = await res.json();
-  const loading = document.getElementById('comments-loading');
-  const list = document.getElementById('comments-list');
+
+  const loading  = document.getElementById('comments-loading');
+  const list     = document.getElementById('comments-list');
   const formWrap = document.getElementById('comments-form');
   if (!list || !formWrap || !loading) return;
 
-  loading.style.display = 'none';
+  loading.style.display  = 'none';
   formWrap.style.display = 'block';
-  list.style.display = 'block';
+  list.style.display     = 'block';
 
-  if (!comments.length) {
+  if (!Array.isArray(comments) || !comments.length) {
     list.innerHTML = '<p style="color:var(--text-muted); font-size:14px; margin-bottom:24px;">No comments yet. Be the first!</p>';
     return;
   }
 
-  const top = comments.filter((c: any) => c.parent === 0);
+  const top     = comments.filter((c: any) => c.parent === 0);
   const replies = comments.filter((c: any) => c.parent !== 0);
 
-  const renderComment = (c: any, isReply = false) => {
-    const avatar = c.author_avatar_urls?.['48'] || '';
-    const date = new Date(c.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const badgeSVG = `<span class="avatar-badge"><svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"/></svg></span>`;
+
+  const renderComment = (c: any, isReply = false): string => {
+    const safeName    = esc(c.author_name || 'Anonymous');
+    const safeDate    = esc(new Date(c.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }));
+    const safeAvatar  = safeUrl(c.author_avatar_urls?.['48'] || '');
+    const isAuthor    = c.author !== 0;
+    const safeContent = sanitizeCommentHtml(c.content?.rendered || '');
     const childReplies = replies.filter((r: any) => r.parent === c.id);
-    const isAuthor = c.author !== 0;
-    const badgeSVG = `<span class="avatar-badge"><svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"/></svg></span>`;
+
     return `
       <div style="display:flex; gap:12px; margin-bottom:20px; ${isReply ? 'margin-left:44px;' : ''}">
-        ${avatar ? `<span class="avatar-badge-wrap"><img src="${avatar}" alt="${c.author_name}" style="width:38px; height:38px; border-radius:50%; display:block; background:var(--brand-primary)" />${isAuthor ? badgeSVG : ''}</span>` : '<div style="width:38px; height:38px; border-radius:50%; background:var(--bg-surface-2); flex-shrink:0;"></div>'}
+        ${safeAvatar
+          ? `<span class="avatar-badge-wrap"><img src="${esc(safeAvatar)}" alt="${safeName}" style="width:38px; height:38px; border-radius:50%; display:block; background:var(--brand-primary)" />${isAuthor ? badgeSVG : ''}</span>`
+          : '<div style="width:38px; height:38px; border-radius:50%; background:var(--bg-surface-2); flex-shrink:0;"></div>'
+        }
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-            <span style="font-weight:700; font-size:14px; color:var(--text-dark);">${c.author_name}</span>
-            <span style="font-size:12px; color:var(--text-muted);">${date}</span>
+            <span style="font-weight:700; font-size:14px; color:var(--text-dark);">${safeName}</span>
+            <span style="font-size:12px; color:var(--text-muted);">${safeDate}</span>
           </div>
-          <div style="font-size:14px; line-height:1.6; color:var(--text-main);">${c.content.rendered.replace(/<strong[^>]*>\s*<\/strong>/g,"").replace(/<b[^>]*>\s*<\/b>/g,"")}</div>
-          <button class="reply-btn" data-id="${c.id}" data-name="${c.author_name}" style="margin-top:6px; background:none; border:none; cursor:pointer; font-size:12px; color:var(--brand-primary); font-weight:600; padding:0;">↩ Reply</button>
+          <div style="font-size:14px; line-height:1.6; color:var(--text-main);">${safeContent}</div>
+          <button class="reply-btn" data-id="${esc(String(c.id))}" data-name="${safeName}" style="margin-top:6px; background:none; border:none; cursor:pointer; font-size:12px; color:var(--brand-primary); font-weight:600; padding:0;">↩ Reply</button>
         </div>
       </div>
       ${childReplies.map((r: any) => renderComment(r, true)).join('')}
     `;
   };
 
-  list.innerHTML = `<h3 style="font-size:1.1rem; font-weight:800; margin-bottom:20px;">${comments.length} Comment${comments.length !== 1 ? 's' : ''}</h3>` + top.map((c: any) => renderComment(c)).join('');
+  list.innerHTML =
+    `<h3 style="font-size:1.1rem; font-weight:800; margin-bottom:20px;">${esc(String(comments.length))} Comment${comments.length !== 1 ? 's' : ''}</h3>` +
+    top.map((c: any) => renderComment(c)).join('');
 
   list.querySelectorAll('.reply-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const id = (btn as HTMLElement).dataset.id;
+      const id   = (btn as HTMLElement).dataset.id;
       const name = (btn as HTMLElement).dataset.name;
       (document.getElementById('c-parent') as HTMLInputElement).value = id || '0';
       const indicator = document.getElementById('reply-indicator');
       const replyName = document.getElementById('reply-name');
       if (indicator && replyName) {
-        replyName.textContent = name || '';
+        replyName.textContent = name || ''; // FIX: textContent, not innerHTML
         indicator.style.display = 'flex';
       }
       document.getElementById('c-content')?.focus();
@@ -102,41 +181,60 @@ document.getElementById('cancel-reply')?.addEventListener('click', () => {
 
 document.getElementById('comment-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const name = (document.getElementById('c-name') as HTMLInputElement).value;
-  const email = (document.getElementById('c-email') as HTMLInputElement).value;
-  const content = (document.getElementById('c-content') as HTMLTextAreaElement).value;
-  const parent = (document.getElementById('c-parent') as HTMLInputElement).value;
-  const msg = document.getElementById('form-msg');
+  const name    = (document.getElementById('c-name')    as HTMLInputElement).value.trim();
+  const email   = (document.getElementById('c-email')   as HTMLInputElement).value.trim();
+  const content = (document.getElementById('c-content') as HTMLTextAreaElement).value.trim();
+  const parent  = (document.getElementById('c-parent')  as HTMLInputElement).value;
+  const msg     = document.getElementById('form-msg');
+
+  if (!name || name.length > 100) {
+    if (msg) { msg.textContent = 'Name is required (max 100 characters).'; msg.style.color = 'red'; }
+    return;
+  }
+  if (!content || content.length > 5000) {
+    if (msg) { msg.textContent = 'Comment must be between 1 and 5000 characters.'; msg.style.color = 'red'; }
+    return;
+  }
 
   if (msg) { msg.textContent = 'Posting...'; msg.style.color = 'var(--text-muted)'; }
 
-  const res = await fetch(WORKER, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ postId, name, email, content, parent })
-  });
+  const submitBtn = document.querySelector('#comment-form button[type="submit"]') as HTMLButtonElement;
+  if (submitBtn) submitBtn.disabled = true;
 
-  if (res.ok) {
-    if (msg) { msg.textContent = '✓ Comment posted! It may be held for moderation.'; msg.style.color = 'green'; }
-    (document.getElementById('comment-form') as HTMLFormElement).reset();
-    (document.getElementById('c-parent') as HTMLInputElement).value = '0';
-    const indicator = document.getElementById('reply-indicator');
-    if (indicator) indicator.style.display = 'none';
-    setTimeout(() => loadComments(), 1000);
-  } else {
-    const err = await res.json();
-    if (msg) { msg.textContent = err.message || 'Failed to post comment.'; msg.style.color = 'red'; }
+  try {
+    const res = await fetch(WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId, name, email, content, parent }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      if (msg) { msg.textContent = '✓ Comment posted! It may be held for moderation.'; msg.style.color = 'green'; }
+      (document.getElementById('comment-form') as HTMLFormElement).reset();
+      (document.getElementById('c-parent') as HTMLInputElement).value = '0';
+      const indicator = document.getElementById('reply-indicator');
+      if (indicator) indicator.style.display = 'none';
+      setTimeout(() => loadComments(), 1000);
+    } else {
+      if (msg) { msg.textContent = data.message || 'Failed to post comment.'; msg.style.color = 'red'; }
+    }
+  } catch {
+    if (msg) { msg.textContent = 'Network error — please try again.'; msg.style.color = 'red'; }
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 });
 
 var loadBtn = document.getElementById('load-comments-btn');
-var inner = document.getElementById('comments-inner');
-var loaded = false;
+var inner   = document.getElementById('comments-inner')!;
+var loaded  = false;
 if (loadBtn) {
-  loadBtn.addEventListener('click', function() {
+  loadBtn.addEventListener('click', function () {
     if (loaded) return;
     loaded = true;
-    loadBtn.style.display = 'none';
+    loadBtn!.style.display = 'none';
     inner.style.display = 'block';
     loadComments();
   });
