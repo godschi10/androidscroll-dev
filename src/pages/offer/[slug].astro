@@ -1,0 +1,29 @@
+---
+export async function getStaticPaths() {
+  const res = await fetch(
+    'https://androidscroll.com/wp-json/wp/v2/thirstylink?per_page=100&_fields=slug,meta'
+  );
+  const links = await res.json();
+
+  return links.map((link) => ({
+    params: { slug: link.slug },
+    props: { destination: link.meta._ta_destination_url },
+  }));
+}
+
+const { destination } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0;url=${destination}`} />
+    <title>Redirecting...</title>
+  </head>
+  <body>
+    <p>Redirecting... <a href={destination}>Click here if nothing happens.</a></p>
+    <script define:vars={{ destination }}>
+      window.location.replace(destination);
+    </script>
+  </body>
+</html>
