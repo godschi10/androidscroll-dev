@@ -25,7 +25,15 @@ export default defineConfig({
       filter: (page) =>
         !page.includes('/live/') &&
         !page.includes('/search/') &&
-        !page.includes('/subscribe/')
+        !page.includes('/subscribe/') &&
+        !page.includes('/offer/') &&
+        !page.includes('/privacy-policy/') &&
+        !page.includes('/cookie-policy/') &&
+        !page.includes('/disclaimer/') &&
+        !page.includes('/comments-policy/') &&
+        !page.includes('/contact/') &&
+        !page.includes('/about-androidscroll/') &&
+        page !== 'https://androidscroll.com/category/'
     })
   ]
 });
