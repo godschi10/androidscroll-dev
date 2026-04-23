@@ -34,7 +34,7 @@ export const GET: APIRoute = async () => {
       lastmod: null,
     }));
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticPages.map(url => `  <url>\n    <loc>${url}</loc>\n  </url>`).join('\n')}
 ${postUrls.map(({ url, lastmod }) => `  <url>
