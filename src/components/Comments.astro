@@ -97,13 +97,14 @@ function safeUrl(url: string): string {
   } catch { return ''; }
 }
 
-// Bypasses Jetpack's i0.wp.com proxy and goes direct to Gravatar,
-// preventing avatar requests from counting against Worker usage.
+// Strips Jetpack's i0.wp.com proxy wrapper so avatar requests go direct
+// to Gravatar instead of counting against Worker usage.
+// Default avatar style is managed in WP: Settings → Discussion → Default Avatar.
 function gravatarDirect(url: string): string {
-  if (!url) return '';
-  const match = url.match(/avatar\/([a-f0-9]+)/i);
-  if (!match) return safeUrl(url);
-  return `https://secure.gravatar.com/avatar/${match[1]}?s=48&d=identicon&r=g`;
+  if (!url) return safeUrl(url);
+  const jetpack = url.match(/^https?:\/\/i\d+\.wp\.com\/(.+)$/);
+  if (jetpack) return safeUrl(`https://${jetpack[1]}`);
+  return safeUrl(url);
 }
 
 const section  = document.getElementById('comments-section');
