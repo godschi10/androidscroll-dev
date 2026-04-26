@@ -312,10 +312,14 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     }
 
     if (firstPara) {
-      new IntersectionObserver(([entry]) => {
-        firstParaVisible = entry.isIntersecting;
-        updateVisibility();
-      }, { threshold: 0 }).observe(firstPara);
+      const paraObs = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          firstParaVisible = true;
+          paraObs.disconnect(); // one-time trigger, never resets
+          updateVisibility();
+        }
+      }, { threshold: 0 });
+      paraObs.observe(firstPara);
     }
 
     if (bottomShare) {
