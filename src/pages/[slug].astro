@@ -254,6 +254,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
 </Layout>
 <button id="as-back-to-top" aria-label="Back to top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
 
+{/* STICKY TOC — commented out, revisit later
 {tocHeadings.length > 2 && (
   <div id="as-sticky-toc" class="as-sticky-toc" aria-hidden="true">
     <div id="as-stp" class="as-stp" role="dialog" aria-label="Table of Contents">
@@ -267,11 +268,13 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     </button>
   </div>
 )}
+*/}
 <script>
   const pb = document.getElementById('as-progress-bar'); if(pb){window.addEventListener('scroll',()=>{const t=window.scrollY;const h=document.documentElement.scrollHeight-window.innerHeight;pb.style.width=(h>0?t/h*100:0)+'%'})}
   const btt=document.getElementById('as-back-to-top');if(btt){window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>600));btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}
   const toc=document.getElementById('as-toc');const th=document.getElementById('toc-header');if(toc&&th){if(localStorage.getItem('toc-open')==='true')toc.classList.remove('toc-collapsed');th.addEventListener('click',()=>{toc.classList.toggle('toc-collapsed');localStorage.setItem('toc-open',!toc.classList.contains('toc-collapsed'))})}
   // Sticky TOC float
+  /* STICKY TOC JS — commented out, revisit later
   const stoc = document.getElementById('as-sticky-toc');
   const stocBtn = document.getElementById('as-sticky-toc-btn');
   const stocPanel = document.getElementById('as-stp');
@@ -329,6 +332,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       }, { threshold: 0 }).observe(bottomShare);
     }
   }
+  */
   // Social share links — deferred to avoid forced reflow during initial paint
   requestAnimationFrame(() => {
     const url = encodeURIComponent(location.href);
