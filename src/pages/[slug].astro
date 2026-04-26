@@ -44,7 +44,7 @@ const bcParent = bcCatFull?.parent ? allCats.find((c: any) => c.id === bcCatFull
 const bcCatHref = bcParent ? `/category/${bcParent.slug}/${bcCat?.slug}` : `/category/${bcCat?.slug}`;
 const bcTitle = title.length > 55 ? title.slice(0, 55) + '…' : title;
 
-// related posts — same category
+// related — same category
 const all = await getPosts(50);
 const postCatIds = post._embedded?.['wp:term']?.[0]?.map((t: any) => t.id) || [];
 const related = all
@@ -276,7 +276,6 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   const stocBtn = document.getElementById('as-sticky-toc-btn');
   const stocPanel = document.getElementById('as-stp');
   if(stoc && stocBtn && stocPanel) {
-    // Show after scrolling ~300px, hide when bottom share section is visible
     const bottomShare = document.getElementById('as-bottom-share');
     let panelOpen = false;
     const togglePanel = (force?: boolean) => {
@@ -287,36 +286,43 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     stocBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePanel(); });
     stocPanel.querySelectorAll('a').forEach(a => a.addEventListener('click', () => togglePanel(false)));
     document.addEventListener('click', (e) => { if(panelOpen && !stoc.contains(e.target as Node)) togglePanel(false); });
-    // Show only when inline TOC has scrolled out of view; hide when bottom share is visible
+
+    // Three gates — all must be true to show:
+    // 1. Inline TOC has scrolled out of view
+    // 2. First paragraph of content is visible (user is inside the article body)
+    // 3. Bottom share section is not yet visible
     const inlineToc = document.getElementById('as-toc');
+    const firstPara = document.querySelector('.post-content p') as HTMLElement | null;
     let inlineTocGone = false;
+    let firstParaVisible = false;
     let bottomShareVisible = false;
+
     const updateVisibility = () => {
-      const show = inlineTocGone && !bottomShareVisible;
+      const show = inlineTocGone && firstParaVisible && !bottomShareVisible;
       stoc.classList.toggle('as-sticky-toc-visible', show);
       stoc.classList.toggle('as-sticky-toc-hidden', !show);
       if (!show) togglePanel(false);
     };
+
     if (inlineToc) {
-      const tocObs = new IntersectionObserver(([entry]) => {
+      new IntersectionObserver(([entry]) => {
         inlineTocGone = !entry.isIntersecting;
         updateVisibility();
-      }, { threshold: 0 });
-      tocObs.observe(inlineToc);
+      }, { threshold: 0 }).observe(inlineToc);
     }
-    // Also hide when user scrolls back near the top (where mobile menu is used)
-    window.addEventListener('scroll', () => {
-      if (window.scrollY < 100) {
-        inlineTocGone = false;
+
+    if (firstPara) {
+      new IntersectionObserver(([entry]) => {
+        firstParaVisible = entry.isIntersecting;
         updateVisibility();
-      }
-    }, { passive: true });
+      }, { threshold: 0 }).observe(firstPara);
+    }
+
     if (bottomShare) {
-      const shareObs = new IntersectionObserver(([entry]) => {
+      new IntersectionObserver(([entry]) => {
         bottomShareVisible = entry.isIntersecting;
         updateVisibility();
-      }, { threshold: 0.1 });
-      shareObs.observe(bottomShare);
+      }, { threshold: 0 }).observe(bottomShare);
     }
   }
   // Social share links — deferred to avoid forced reflow during initial paint
