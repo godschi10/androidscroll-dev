@@ -274,7 +274,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   const btt=document.getElementById('as-back-to-top');if(btt){window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>600));btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}
   const toc=document.getElementById('as-toc');const th=document.getElementById('toc-header');if(toc&&th){if(localStorage.getItem('toc-open')==='true')toc.classList.remove('toc-collapsed');th.addEventListener('click',()=>{toc.classList.toggle('toc-collapsed');localStorage.setItem('toc-open',!toc.classList.contains('toc-collapsed'))})}
   // Sticky TOC float
-  /* STICKY TOC JS — commented out, revisit later
+  /** STICKY TOC JS — commented out, revisit later
   const stoc = document.getElementById('as-sticky-toc');
   const stocBtn = document.getElementById('as-sticky-toc-btn');
   const stocPanel = document.getElementById('as-stp');
