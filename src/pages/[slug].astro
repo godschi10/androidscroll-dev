@@ -104,16 +104,24 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     <nav class="as-breadcrumbs" aria-label="Breadcrumb">
       <a href="/" class="as-bc-home">Home</a>
       <span class="as-bc-sep" aria-hidden="true">›</span>
-      {post._embedded?.['wp:term']?.[0]?.length > 0 && post._embedded['wp:term'][0].map((cat: any) => {
-        const full = allCats.find((c: any) => c.id === cat.id);
-        if (!full) return null;
-        if (full.parent === 0) {
-          return <a href={`/category/${cat.slug}`} class="category_meta-pill" data-astro-prefetch>{decode(cat.name)}</a>;
-        } else {
-          const parent = allCats.find((c: any) => c.id === full.parent);
-          return <a href={`/category/${parent?.slug ?? ''}/${cat.slug}`} class="category_meta-pill" data-astro-prefetch>{decode(cat.name)}</a>;
+      {(() => {
+        const terms = post._embedded?.['wp:term']?.[0] ?? [];
+        const resolved = terms.map((cat: any) => allCats.find((c: any) => c.id === cat.id)).filter(Boolean);
+        // Explicitly separate — never rely on WP term order
+        const childCat = resolved.find((c: any) => c.parent !== 0);
+        const parentCat = childCat
+          ? allCats.find((c: any) => c.id === childCat.parent)
+          : resolved.find((c: any) => c.parent === 0);
+        if (!childCat && !parentCat) return null;
+        if (childCat && parentCat) {
+          return <>
+            <a href={`/category/${parentCat.slug}`} class="as-bc-parent" data-astro-prefetch>{decode(parentCat.name)}</a>
+            <span class="as-bc-sep" aria-hidden="true">›</span>
+            <a href={`/category/${parentCat.slug}/${childCat.slug}`} class="category_meta-pill" data-astro-prefetch>{decode(childCat.name)}</a>
+          </>;
         }
-      })}
+        return <a href={`/category/${parentCat!.slug}`} class="category_meta-pill" data-astro-prefetch>{decode(parentCat!.name)}</a>;
+      })()}
     </nav>
   <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
     <div class="meta-scroll-wrapper"><div class="scrollable-meta">
@@ -344,6 +352,8 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   }
   .as-bc-home { color: var(--text-muted); text-decoration: none; }
   .as-bc-home:hover { color: var(--color-primary, #00a896); }
+  .as-bc-parent { color: var(--text-muted); text-decoration: none; font-size: 12px; }
+  .as-bc-parent:hover { color: var(--color-primary, #00a896); }
   .as-bc-sep { opacity: 0.45; font-size: 11px; }
   .category_meta-pill {
     display: inline-flex;
@@ -369,7 +379,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     position: fixed;
     bottom: 80px; /* same as #as-back-to-top.show bottom value */
     left: 20px;   /* left side, parallel to back-to-top on the right */
-    z-index: 9999;
+    z-index: 98;  /* below header (z-index:100) — can never overlap mobile menu */
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
