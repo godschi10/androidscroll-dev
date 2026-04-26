@@ -304,6 +304,13 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       }, { threshold: 0 });
       tocObs.observe(inlineToc);
     }
+    // Also hide when user scrolls back near the top (where mobile menu is used)
+    window.addEventListener('scroll', () => {
+      if (window.scrollY < 100) {
+        inlineTocGone = false;
+        updateVisibility();
+      }
+    }, { passive: true });
     if (bottomShare) {
       const shareObs = new IntersectionObserver(([entry]) => {
         bottomShareVisible = entry.isIntersecting;
@@ -342,19 +349,20 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   /* Breadcrumbs — merged with category pill */
   .as-breadcrumbs {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 6px;
     font-size: 12px;
     color: var(--text-muted);
     margin-bottom: 14px;
     line-height: 1.4;
+    overflow: hidden;
   }
-  .as-bc-home { color: var(--text-muted); text-decoration: none; }
+  .as-bc-home { color: var(--text-muted); text-decoration: none; white-space: nowrap; flex-shrink: 0; }
   .as-bc-home:hover { color: var(--color-primary, #00a896); }
-  .as-bc-parent { color: var(--text-muted); text-decoration: none; font-size: 12px; }
+  .as-bc-parent { color: var(--text-muted); text-decoration: none; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
   .as-bc-parent:hover { color: var(--color-primary, #00a896); }
-  .as-bc-sep { opacity: 0.45; font-size: 11px; }
+  .as-bc-sep { opacity: 0.45; font-size: 11px; flex-shrink: 0; white-space: nowrap; }
   .category_meta-pill {
     display: inline-flex;
     align-items: center;
@@ -368,6 +376,8 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     letter-spacing: 0.6px;
     text-decoration: none;
     transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .category_meta-pill:hover {
     background: var(--color-primary, #00a896);
