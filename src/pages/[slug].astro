@@ -44,7 +44,7 @@ const bcParent = bcCatFull?.parent ? allCats.find((c: any) => c.id === bcCatFull
 const bcCatHref = bcParent ? `/category/${bcParent.slug}/${bcCat?.slug}` : `/category/${bcCat?.slug}`;
 const bcTitle = title.length > 55 ? title.slice(0, 55) + '…' : title;
 
-// related — same category
+// related posts — same category
 const all = await getPosts(50);
 const postCatIds = post._embedded?.['wp:term']?.[0]?.map((t: any) => t.id) || [];
 const related = all
