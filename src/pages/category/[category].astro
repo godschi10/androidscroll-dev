@@ -33,12 +33,21 @@ const posts = await getPostsByCategory(cat.id);
     }
   }}
 >
-  <nav class="text-sm mb-4 flex items-center gap-2 text-neutral-500">
-  <a href="/category" class="text-[#00a88f] hover:underline">All Categories</a>
-  <span>→</span>
-  <span class="text-neutral-700 dark:text-neutral-300">{decode(cat.name)}</span>
-</nav>
+  <nav class="as-breadcrumbs" aria-label="Breadcrumb">
+    <a href="/" class="as-bc-home">Home</a>
+    <span class="as-bc-sep" aria-hidden="true">›</span>
+    <span class="category_meta-pill">{decode(cat.name)}</span>
+  </nav>
   <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">{decode(cat.name)}</h1>
+
+<style>
+  .as-breadcrumbs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.4; }
+  .as-bc-home { color:var(--text-muted); text-decoration:none; }
+  .as-bc-home:hover { color:var(--brand-primary,#00a896); }
+  .as-bc-sep { opacity:0.45; font-size:11px; }
+  .category_meta-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; border:1.5px solid var(--brand-primary,#00a896); color:var(--brand-primary,#00a896); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; text-decoration:none; }
+  a.category_meta-pill:hover { background:var(--brand-primary,#00a896); color:#fff; }
+</style>
   {posts.length === 0 && <p class="text-neutral-500">No posts yet.</p>}
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {posts.map((post: any) => {

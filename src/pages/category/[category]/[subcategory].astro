@@ -42,12 +42,25 @@ const posts = await getPostsByCategory(child.id);
     }
   }}
 >
-  <nav class="text-sm mb-6 flex items-center gap-1 flex-wrap text-neutral-500">
-  {parent && <a href={`/category/${parent.slug}`} class="text-[#00a88f] hover:underline font-medium">{decode(parent.name)}</a>}
-  {parent && <span class="mx-1">→</span>}
-  <span class="text-neutral-700 dark:text-neutral-300 font-medium">{decode(child.name)}</span>
-</nav>
+  <nav class="as-breadcrumbs" aria-label="Breadcrumb">
+    <a href="/" class="as-bc-home">Home</a>
+    <span class="as-bc-sep" aria-hidden="true">›</span>
+    {parent && <a href={`/category/${parent.slug}`} class="as-bc-parent">{decode(parent.name)}</a>}
+    {parent && <span class="as-bc-sep" aria-hidden="true">›</span>}
+    <span class="category_meta-pill">{decode(child.name)}</span>
+  </nav>
   <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">{decode(child.name)}</h1>
+
+<style>
+  .as-breadcrumbs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.4; }
+  .as-bc-home { color:var(--text-muted); text-decoration:none; }
+  .as-bc-home:hover { color:var(--brand-primary,#00a896); }
+  .as-bc-parent { color:var(--text-muted); text-decoration:none; font-size:12px; }
+  .as-bc-parent:hover { color:var(--brand-primary,#00a896); }
+  .as-bc-sep { opacity:0.45; font-size:11px; }
+  .category_meta-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; border:1.5px solid var(--brand-primary,#00a896); color:var(--brand-primary,#00a896); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; text-decoration:none; }
+  a.category_meta-pill:hover { background:var(--brand-primary,#00a896); color:#fff; }
+</style>
   {posts.length === 0 && <p class="text-neutral-500">No posts yet.</p>}
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {posts.map((post: any) => {
