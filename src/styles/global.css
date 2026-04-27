@@ -322,7 +322,7 @@ layout{margin-top:30px !important}
   display: block;
 }
 .toc-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
-.toc-title { font-weight: 700; font-size: 0.9em; color: var(--text-dark); }
+.toc-title { font-weight: 700; font-size: 1em; color: var(--text-dark); }
 .toc-toggle::after { content: "\2212"; color: var(--brand-primary); font-weight: bold; font-size: 1em; }
 .android-scroll-toc.toc-collapsed .toc-toggle::after { content: "\002B"; }
 .android-scroll-toc.toc-collapsed .toc-list { display: none; }
