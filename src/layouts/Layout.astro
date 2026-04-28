@@ -5,7 +5,12 @@ import '../styles/theme.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
 import { getPosts, getCategories, decode } from '../lib/wp';
 
-const wpPosts = await getPosts(100);
+// Module-level promises — resolved once on first render, reused by every
+// subsequent page that imports this layout during the same build process.
+import.meta._postsPromise ??= getPosts(100);
+import.meta._catsPromise  ??= getCategories();
+
+const wpPosts = await (import.meta as any)._postsPromise;
 const posts = wpPosts.map((p: any) => ({
   id: p.slug,
   slug: p.slug,
@@ -21,7 +26,7 @@ const posts = wpPosts.map((p: any) => ({
   }
 })).sort((a: any, b: any) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const allCats = await getCategories();
+const allCats = await (import.meta as any)._catsPromise;
 const parents = allCats.filter((c: any) => c.parent === 0);
 const children = allCats.filter((c: any) => c.parent !== 0);
 const navCategories = parents.map((p: any) => ({
@@ -64,6 +69,8 @@ const socialLinks = [
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#008f79" />
+  <link rel="preconnect" href="https://images.androidscroll.com" />
+  {cover && <link rel="preload" as="image" href={cover} fetchpriority="high" />}
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
   <link rel="apple-touch-icon" href="/AndroidScroll-Favicon.png" />
@@ -180,32 +187,7 @@ const socialLinks = [
     .mobile-social-icon svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
   </style>
 
-  <!-- Matomo -->
-  <script is:inline>
-    var _paq = window._paq = window._paq || [];
-    _paq.push(['disableCookies']);
-    _paq.push(['setDoNotTrack', true]);
-    _paq.push(["setExcludedReferrers", ["androidscroll.com","analytics.androidscroll.com"]]);
-    _paq.push(['enableLinkTracking']);
-    _paq.push(['enableHeartBeatTimer', 5]);
-    function trackAstroPage() {
-      _paq.push(['setCustomUrl', window.location.href]);
-      _paq.push(['setDocumentTitle', document.title]);
-      _paq.push(['trackPageView']);
-    }
 
-    trackAstroPage();
-    document.addEventListener('astro:page-load', trackAstroPage);
-    
-    (function() {
-      var u="//analytics.androidscroll.com/";
-      _paq.push(['setTrackerUrl', u+'matomo.php']);
-      _paq.push(['setSiteId', '1']);
-      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-    })();
-  </script>
-  <!-- End Matomo -->
 </head>
 <body>
 
@@ -215,7 +197,7 @@ const socialLinks = [
 
     <!-- Logo -->
     <a href="/" style="flex-shrink:0;">
-      <img src="https://images.androidscroll.com/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="160" height="40" style="max-height:38px; max-width:170; display:block;" />
+      <img src="https://images.androidscroll.com/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="160" height="40" style="max-height:38px; max-width:170px; display:block;" />
     </a>
 
     <!-- Desktop Nav -->
@@ -457,6 +439,30 @@ const socialLinks = [
   });
 </script>
 <!-- End Matomo Tracking -->
+<!-- Matomo — deferred to end of body, never blocks rendering -->
+<script is:inline>
+  var _paq = window._paq = window._paq || [];
+  _paq.push(['disableCookies']);
+  _paq.push(['setDoNotTrack', true]);
+  _paq.push(["setExcludedReferrers", ["androidscroll.com","analytics.androidscroll.com"]]);
+  _paq.push(['enableLinkTracking']);
+  _paq.push(['enableHeartBeatTimer', 5]);
+  function trackAstroPage() {
+    _paq.push(['setCustomUrl', window.location.href]);
+    _paq.push(['setDocumentTitle', document.title]);
+    _paq.push(['trackPageView']);
+  }
+  trackAstroPage();
+  document.addEventListener('astro:page-load', trackAstroPage);
+  (function() {
+    var u="//analytics.androidscroll.com/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo -->
 
 </body>
 </html>
