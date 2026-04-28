@@ -5,12 +5,7 @@ import '../styles/theme.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
 import { getPosts, getCategories, decode } from '../lib/wp';
 
-// Module-level promises — resolved once on first render, reused by every
-// subsequent page that imports this layout during the same build process.
-import.meta._postsPromise ??= getPosts(100);
-import.meta._catsPromise  ??= getCategories();
-
-const wpPosts = await (import.meta as any)._postsPromise;
+const wpPosts = await getPosts(100);
 const posts = wpPosts.map((p: any) => ({
   id: p.slug,
   slug: p.slug,
@@ -26,7 +21,7 @@ const posts = wpPosts.map((p: any) => ({
   }
 })).sort((a: any, b: any) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const allCats = await (import.meta as any)._catsPromise;
+const allCats = await getCategories();
 const parents = allCats.filter((c: any) => c.parent === 0);
 const children = allCats.filter((c: any) => c.parent !== 0);
 const navCategories = parents.map((p: any) => ({
@@ -439,7 +434,7 @@ const socialLinks = [
   });
 </script>
 <!-- End Matomo Tracking -->
-<!-- Matomo — deferred to end of body, never blocks rendering -->
+<!-- Matomo -->
 <script is:inline>
   var _paq = window._paq = window._paq || [];
   _paq.push(['disableCookies']);
