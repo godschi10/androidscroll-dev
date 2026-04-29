@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/style.min.css';
-//import '../styles/theme.min.css';
+import '../styles/theme.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
 import { getPosts, getCategories, decode } from '../lib/wp';
 
@@ -66,6 +66,8 @@ const socialLinks = [
   <meta name="theme-color" content="#008f79" />
   <link rel="preconnect" href="https://images.androidscroll.com" />
   {cover && <link rel="preload" as="image" href={cover} fetchpriority="high" />}
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/space-grotesk-v22-latin-700.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-v20-latin-regular.woff2" crossorigin />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
   <link rel="apple-touch-icon" href="/AndroidScroll-Favicon.png" />
