@@ -373,50 +373,93 @@ p.first-p { margin-top: 0px !important; }
 .post-meta-block {
   border-top: 1px solid var(--border-dark);
   border-bottom: 1px solid var(--border-dark);
-  padding: 14px 0;
-  margin: 25px 0;
+  padding: 12px 0;
+  margin: 20px 0 24px;
 }
-/* Single flex row — wraps to 2 lines on mobile, stays 1 line on tablet/desktop */
+
+/*
+  Flex-wrap layout:
+  Mobile  → Row 1: [avatar + name]  [pill right]
+             Row 2: [• updated • date]  (indented under name)
+  ≥600px  → Single row: [avatar + name] [• updated • date] ··· [pill]
+*/
 .meta-row-main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  column-gap: 8px;
+  row-gap: 5px;
 }
-.meta-author-wrapper { font-weight: 700; color: var(--text-main); flex-shrink: 0; }
-.meta-author-wrapper a { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
-.meta-author-wrapper img { border-radius: 50%; width: 28px; height: 28px; }
-/* Dates: full-width on mobile so they wrap to their own line */
-.meta-dates-group {
+
+/* ORDER 1 — author always first */
+.meta-author-wrapper {
+  order: 1;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78em;
-  color: var(--text-muted);
-  flex-wrap: wrap;
-  width: 100%;
+  flex-shrink: 0;
+  font-size: 0.875em;
+  font-weight: 700;
+  color: var(--text-main);
 }
-/* On tablet/desktop: dates flow inline, pill pushed right by auto margin */
-@media (min-width: 600px) {
-  .meta-dates-group { width: auto; }
+.meta-author-wrapper a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  color: inherit;
 }
-.meta-date-wrapper { display: inline-flex; align-items: center; gap: 4px; }
-.meta-date-sep { opacity: 0.5; font-size: 10px; }
-.meta-updated-wrapper { font-style: italic; }
+.meta-author-wrapper img {
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+/* ORDER 2 (mobile) — pill sits right of author on the same row */
 .meta-read-time-pill {
+  order: 2;
+  margin-left: auto;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: var(--accent-teal, #0ee8b5);
-  color: #000;
+  background: var(--brand-primary);
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: 0.3px;
   white-space: nowrap;
-  margin-left: auto;
 }
+
+/* ORDER 3 (mobile) — dates fill their own second row, indented under name */
+.meta-dates-group {
+  order: 3;
+  width: 100%;               /* forces its own row on mobile */
+  padding-left: 35px;        /* visually aligns under the name (skips avatar) */
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 5px;
+  font-size: 0.775em;
+  color: var(--text-muted);
+}
+
+/* ≥600px: reflow everything to a single row */
+@media (min-width: 600px) {
+  .meta-dates-group {
+    order: 2;       /* dates slide between author and pill */
+    width: auto;
+    padding-left: 0;
+  }
+  .meta-read-time-pill {
+    order: 3;
+  }
+}
+
+.meta-date-wrapper    { display: inline-flex; align-items: center; }
+.meta-date-sep        { opacity: 0.45; font-size: 10px; padding: 0 1px; }
+.meta-updated-wrapper { font-style: italic; }
 
 /* ==========================================================================
    8. CATEGORY BADGE
