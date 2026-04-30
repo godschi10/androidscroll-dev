@@ -37,6 +37,14 @@ let contentHtml = post.content.rendered.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (m, 
 });
 const tocHeadings = [...contentHtml.matchAll(/<h2 id="([^"]*)"[^>]*>(.*?)<\/h2>/gi)].map(m => ({ slug: m[1], text: decode(m[2].replace(/<[^>]+>/g,'')) }));
 
+// Build TOC HTML and inject before first H2
+const tocHtml = tocHeadings.length > 2
+  ? `<div class="android-scroll-toc toc-collapsed" id="as-toc" style="margin-bottom:30px; margin-top:0px;"><div class="toc-header" id="toc-header"><span class="toc-title">📋 Table of Contents</span><span class="toc-toggle" id="toc-toggle"></span></div><ul class="toc-list" id="toc-list">${tocHeadings.map(h => `<li><a href="#${h.slug}">${h.text}</a></li>`).join('')}</ul></div>`
+  : '';
+if (tocHtml) {
+  contentHtml = contentHtml.replace(/<h2/, tocHtml + '<h2');
+}
+
 // breadcrumb — first category + parent if subcategory
 const bcCat = post._embedded?.['wp:term']?.[0]?.[0] || null;
 const bcCatFull = bcCat ? allCats.find((c: any) => c.id === bcCat.id) : null;
@@ -167,13 +175,6 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
           height={coverHeight ?? undefined}
           style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);"
         />
-      </div>
-    )}
-
-    {tocHeadings.length > 2 && (
-      <div class="android-scroll-toc toc-collapsed" id="as-toc" style="margin-bottom:30px; margin-top:0px;">
-        <div class="toc-header" id="toc-header"><span class="toc-title">📋 Table of Contents</span><span class="toc-toggle" id="toc-toggle"></span></div>
-        <ul class="toc-list" id="toc-list">{tocHeadings.map(h => (<li><a href={`#${h.slug}`}>{h.text}</a></li>))}</ul>
       </div>
     )}
 
