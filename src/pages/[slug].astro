@@ -139,6 +139,22 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       })()}
     </nav>
   <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
+  
+    {cover && (
+      <div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;">
+        <img
+          src={cover}
+          alt={coverAlt}
+          id="featured-image"
+          fetchpriority="high"
+          loading="eager"
+          width={coverWidth ?? undefined}
+          height={coverHeight ?? undefined}
+          style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);"
+        />
+      </div>
+    )}
+  
     <div class="post-meta-block">
       <div class="meta-author-row">
         <a href="/about-androidscroll" class="meta-avatar-link" tabindex="-1" aria-hidden="true">
@@ -183,20 +199,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       </a>
     </div>
 
-    {cover && (
-      <div style="margin:20px 0 30px; border-radius:var(--radius-main); overflow:hidden;">
-        <img
-          src={cover}
-          alt={coverAlt}
-          id="featured-image"
-          fetchpriority="high"
-          loading="eager"
-          width={coverWidth ?? undefined}
-          height={coverHeight ?? undefined}
-          style="width:100%; height:auto; border-radius:var(--radius-main); box-shadow:var(--shadow-soft);"
-        />
-      </div>
-    )}
+
 
     <div class="post-content" set:html={contentHtml}></div>
 
