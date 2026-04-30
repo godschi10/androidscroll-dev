@@ -24,6 +24,8 @@ const AUTHOR_EMAIL  = 'godschi10@gmail.com';
 const gravatarHash  = createHash('md5').update(AUTHOR_EMAIL.trim().toLowerCase()).digest('hex');
 const authorAvatar  = `https://www.gravatar.com/avatar/${gravatarHash}?s=100`;
 const date = new Date(post.date);
+const modified = new Date(post.modified);
+const isUpdated = post.modified && post.modified.slice(0, 10) !== post.date.slice(0, 10);
 
 // reading time
 const wordCount = post.content.rendered.replace(/<[^>]+>/g,' ').split(/\s+/).length;
@@ -141,8 +143,14 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       <span class="meta-author-wrapper"><a href="/about-androidscroll"><img src={authorAvatar} alt="G-will Chijioke - AndroidScroll Author" width="28" height="28" /><span>G-will Chijioke</span></a></span>
       <span class="meta-sep">•</span>
       <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+      {isUpdated && (
+        <>
+          <span class="meta-sep">•</span>
+          <span class="meta-updated-wrapper">Updated {modified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        </>
+      )}
       <span class="meta-sep">•</span>
-      <span class="meta-read-time">{readingTime} min read</span>
+      <span class="meta-read-time-pill">{readingTime} min read</span>
     </div></div>
 
     <!-- Compact Share Row (top) -->
@@ -275,6 +283,27 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   </div>
 )}
 */}
+<style>
+  .meta-read-time-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-teal, #0ee8b5);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .meta-updated-wrapper {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-style: italic;
+  }
+</style>
 <script>
   const pb = document.getElementById('as-progress-bar'); if(pb){window.addEventListener('scroll',()=>{const t=window.scrollY;const h=document.documentElement.scrollHeight-window.innerHeight;pb.style.width=(h>0?t/h*100:0)+'%'})}
   const btt=document.getElementById('as-back-to-top');if(btt){window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>600));btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}
