@@ -140,31 +140,23 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
     </nav>
   <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
     <div class="post-meta-block">
-      <!-- Single flex row: 2 lines on mobile, 1 line on tablet/desktop -->
-      <div class="meta-row-main">
-        <span class="meta-author-wrapper">
-          <a href="/about-androidscroll">
-            <img src={authorAvatar} alt="G-will Chijioke - AndroidScroll Author" width="28" height="28" />
-            <span>G-will Chijioke</span>
-          </a>
-        </span>
-        <!-- Dates: full-width on mobile (own line), inline on tablet/desktop -->
-        <span class="meta-dates-group">
-          {isUpdated ? (
-            <>
-              <span class="meta-date-sep">•</span>
-              <span class="meta-updated-wrapper">Updated {modified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              <span class="meta-date-sep">•</span>
-              <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-            </>
-          ) : (
-            <>
-              <span class="meta-date-sep">•</span>
-              <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-            </>
-          )}
-        </span>
-        <span class="meta-read-time-pill">{readingTime} min read</span>
+      <div class="meta-author-row">
+        <a href="/about-androidscroll" class="meta-avatar-link" tabindex="-1" aria-hidden="true">
+          <img src={authorAvatar} alt="G-will Chijioke" width="40" height="40" />
+        </a>
+        <div class="meta-author-details">
+          <a href="/about-androidscroll" class="meta-author-name">G-will Chijioke</a>
+          <div class="meta-secondary-row">
+            <span class="meta-updated-label">
+              {isUpdated
+                ? `Updated ${modified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              }
+            </span>
+            <span class="meta-sep" aria-hidden="true">·</span>
+            <span class="meta-readtime">{readingTime} min read</span>
+          </div>
+        </div>
       </div>
     </div>
 

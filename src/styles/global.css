@@ -34,7 +34,7 @@
 /* ==========================================================================
    1. GLOBAL VARIABLES
    ========================================================================== */
-:root { 
+:root {
   --brand-primary:          #00A88F;
   --brand-hover:            #008c72;
   --brand-light:            #eef9f6;
@@ -373,93 +373,59 @@ p.first-p { margin-top: 0px !important; }
 .post-meta-block {
   border-top: 1px solid var(--border-dark);
   border-bottom: 1px solid var(--border-dark);
-  padding: 12px 0;
-  margin: 20px 0 24px;
+  padding: 14px 0;
+  margin: 20px 0 26px;
 }
 
-/*
-  Flex-wrap layout:
-  Mobile  → Row 1: [avatar + name]  [pill right]
-             Row 2: [• updated • date]  (indented under name)
-  ≥600px  → Single row: [avatar + name] [• updated • date] ··· [pill]
-*/
-.meta-row-main {
+/* Avatar + details side by side */
+.meta-author-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  column-gap: 8px;
-  row-gap: 5px;
+  gap: 11px;
 }
 
-/* ORDER 1 — author always first */
-.meta-author-wrapper {
-  order: 1;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  font-size: 0.875em;
-  font-weight: 700;
-  color: var(--text-main);
-}
-.meta-author-wrapper a {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  text-decoration: none;
-  color: inherit;
-}
-.meta-author-wrapper img {
+/* Avatar */
+.meta-avatar-link img {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  object-fit: cover;
   flex-shrink: 0;
+  display: block;
 }
 
-/* ORDER 2 (mobile) — pill sits right of author on the same row */
-.meta-read-time-pill {
-  order: 2;
-  margin-left: auto;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  background: var(--brand-primary);
-  color: #fff;
-  font-size: 11px;
+/* Stacked text column */
+.meta-author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Author name — line 1 */
+.meta-author-name {
+  font-size: 0.9em;
   font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
+  color: var(--text-dark);
+  text-decoration: none;
+  line-height: 1.2;
+  transition: color 0.15s;
 }
+.meta-author-name:hover { color: var(--brand-primary); }
 
-/* ORDER 3 (mobile) — dates fill their own second row, indented under name */
-.meta-dates-group {
-  order: 3;
-  width: 100%;               /* forces its own row on mobile */
-  padding-left: 35px;        /* visually aligns under the name (skips avatar) */
+/* Date + read time — line 2 */
+.meta-secondary-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0 5px;
+  gap: 0 6px;
   font-size: 0.775em;
   color: var(--text-muted);
+  line-height: 1.3;
 }
-
-/* ≥600px: reflow everything to a single row */
-@media (min-width: 600px) {
-  .meta-dates-group {
-    order: 2;       /* dates slide between author and pill */
-    width: auto;
-    padding-left: 0;
-  }
-  .meta-read-time-pill {
-    order: 3;
-  }
-}
-
-.meta-date-wrapper    { display: inline-flex; align-items: center; }
-.meta-date-sep        { opacity: 0.45; font-size: 10px; padding: 0 1px; }
-.meta-updated-wrapper { font-style: italic; }
+.meta-updated-label { font-style: italic; }
+.meta-sep           { opacity: 0.35; user-select: none; }
+.meta-readtime      { font-weight: 600; color: var(--brand-primary); }
 
 /* ==========================================================================
    8. CATEGORY BADGE
