@@ -100,9 +100,7 @@
   thead { background-color: var(--bg-surface-2) !important; }
   td, th { border-color: var(--border-dark) !important; }
   @media (max-width: 600px) {
-    .meta-scroll-wrapper::after {
-      background: linear-gradient(to right, transparent, var(--bg-surface));
-    }
+    /* meta scroll wrapper removed — two-row layout needs no fade */
   }
 }
 
@@ -372,44 +370,52 @@ p.first-p { margin-top: 0px !important; }
 /* ==========================================================================
    7. POST META
    ========================================================================== */
-.meta-scroll-wrapper {
+.post-meta-block {
   border-top: 1px solid var(--border-dark);
   border-bottom: 1px solid var(--border-dark);
-  padding: 17.5px 0;
+  padding: 14px 0;
   margin: 25px 0;
-  overflow: hidden;
-  width: 100%;
 }
-.scrollable-meta {
+/* Single flex row — wraps to 2 lines on mobile, stays 1 line on tablet/desktop */
+.meta-row-main {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  font-size: 0.8em;
-  color: var(--text-muted);
-  padding-right:30px;
+  gap: 6px;
 }
-.scrollable-meta::-webkit-scrollbar { display: none; }
-.scrollable-meta span { white-space: nowrap; flex-shrink: 0; }
-.meta-author-wrapper, .meta-comments-wrapper { font-weight: 700; color: var(--text-main); }
+.meta-author-wrapper { font-weight: 700; color: var(--text-main); flex-shrink: 0; }
 .meta-author-wrapper a { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
 .meta-author-wrapper img { border-radius: 50%; width: 28px; height: 28px; }
-.meta-sep { opacity: 0.5; font-size: 10px; margin: 0 10px; display: inline-block; }
-.meta-date-wrapper, .meta-read-time { display: inline-flex; align-items: center; gap: 4px; }
-
-@media (max-width: 600px) {
-  .meta-scroll-wrapper { position: relative; }
-  .meta-scroll-wrapper::after {
-    content: '';
-    position: absolute;
-    top: 0; right: 0;
-    height: 100%; width: 30px;
-    background: linear-gradient(to right, transparent, var(--bg-surface));
-    pointer-events: none;
-  }
+/* Dates: full-width on mobile so they wrap to their own line */
+.meta-dates-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78em;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  width: 100%;
+}
+/* On tablet/desktop: dates flow inline, pill pushed right by auto margin */
+@media (min-width: 600px) {
+  .meta-dates-group { width: auto; }
+}
+.meta-date-wrapper { display: inline-flex; align-items: center; gap: 4px; }
+.meta-date-sep { opacity: 0.5; font-size: 10px; }
+.meta-updated-wrapper { font-style: italic; }
+.meta-read-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-teal, #0ee8b5);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 /* ==========================================================================

@@ -139,19 +139,34 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
       })()}
     </nav>
   <h1 style="margin-bottom:0.25em;" set:html={post.title.rendered}></h1>
-    <div class="meta-scroll-wrapper"><div class="scrollable-meta">
-      <span class="meta-author-wrapper"><a href="/about-androidscroll"><img src={authorAvatar} alt="G-will Chijioke - AndroidScroll Author" width="28" height="28" /><span>G-will Chijioke</span></a></span>
-      <span class="meta-sep">•</span>
-      <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-      {isUpdated && (
-        <>
-          <span class="meta-sep">•</span>
-          <span class="meta-updated-wrapper">Updated {modified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-        </>
-      )}
-      <span class="meta-sep">•</span>
-      <span class="meta-read-time-pill">{readingTime} min read</span>
-    </div></div>
+    <div class="post-meta-block">
+      <!-- Single flex row: 2 lines on mobile, 1 line on tablet/desktop -->
+      <div class="meta-row-main">
+        <span class="meta-author-wrapper">
+          <a href="/about-androidscroll">
+            <img src={authorAvatar} alt="G-will Chijioke - AndroidScroll Author" width="28" height="28" />
+            <span>G-will Chijioke</span>
+          </a>
+        </span>
+        <!-- Dates: full-width on mobile (own line), inline on tablet/desktop -->
+        <span class="meta-dates-group">
+          {isUpdated ? (
+            <>
+              <span class="meta-date-sep">•</span>
+              <span class="meta-updated-wrapper">Updated {modified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <span class="meta-date-sep">•</span>
+              <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            </>
+          ) : (
+            <>
+              <span class="meta-date-sep">•</span>
+              <span class="meta-date-wrapper">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            </>
+          )}
+        </span>
+        <span class="meta-read-time-pill">{readingTime} min read</span>
+      </div>
+    </div>
 
     <!-- Compact Share Row (top) -->
     <div class="as-top-share">
@@ -283,27 +298,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   </div>
 )}
 */}
-<style>
-  .meta-read-time-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--accent-teal, #0ee8b5);
-    color: #000;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 20px;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-  }
-  .meta-updated-wrapper {
-    font-size: 12px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    font-style: italic;
-  }
-</style>
+
 <script>
   const pb = document.getElementById('as-progress-bar'); if(pb){window.addEventListener('scroll',()=>{const t=window.scrollY;const h=document.documentElement.scrollHeight-window.innerHeight;pb.style.width=(h>0?t/h*100:0)+'%'})}
   const btt=document.getElementById('as-back-to-top');if(btt){window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>600));btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}
