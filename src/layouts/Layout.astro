@@ -459,6 +459,45 @@ const socialLinks = [
     g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
   })();
 </script>
+
+// Matomo opt-out widget (privacy policy page)
+(function () {
+  var statusEl = document.getElementById('optout-status');
+  var btnEl = document.getElementById('optout-btn');
+  if (!statusEl || !btnEl) return; // not on privacy policy page, do nothing
+
+  var KEY = 'matomo_optout';
+
+  function isOptedOut() {
+    try { return localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+  }
+
+  function updateUI() {
+    var opted = isOptedOut();
+    statusEl.textContent = opted
+      ? 'You are currently opted out. Your visits are not being tracked.'
+      : 'You are currently opted in. Your visits are being tracked anonymously.';
+    btnEl.textContent = opted ? 'Click here to opt back in' : 'Click here to opt out';
+    btnEl.style.background = opted ? '#555' : '#00A88F';
+  }
+
+  btnEl.addEventListener('click', function () {
+    var opted = isOptedOut();
+    try {
+      if (opted) { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, '1'); }
+    } catch(e) {}
+    window._paq = window._paq || [];
+    window._paq.push([opted ? 'forgetUserOptOut' : 'optUserOut']);
+    updateUI();
+  });
+
+  updateUI();
+
+  if (isOptedOut()) {
+    window._paq = window._paq || [];
+    window._paq.push(['optUserOut']);
+  }
+})();
 <!-- End Matomo -->
 
 </body>
