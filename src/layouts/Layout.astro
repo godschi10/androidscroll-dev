@@ -367,12 +367,10 @@ const socialLinks = [
   var el = document.getElementById('asStickyFooter');
   var cl = document.getElementById('asSfClose');
   if (!el || !cl) return;
-  if (sessionStorage.getItem('as_sf_closed')) { el.style.display='none'; return; }
   setTimeout(function(){ el.classList.add('as-sf--show'); }, 5000);
   cl.addEventListener('click', function(){
     el.classList.remove('as-sf--show');
     setTimeout(function(){ el.style.display='none'; }, 350);
-    sessionStorage.setItem('as_sf_closed','1');
   });
 })();
 </script>
