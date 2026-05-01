@@ -819,6 +819,7 @@ pre{margin: 0 0 40px;
     flex-wrap: wrap;
   border-top: 1px solid var(--border-dark);
   border-bottom: 1px solid var(--border-dark);
+  padding: 14px 0;
   }
   .as-top-share-label {
     font-size: 9px;
