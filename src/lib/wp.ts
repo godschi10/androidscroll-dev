@@ -15,30 +15,45 @@ const API        = 'https://androidscroll.com/wp-json/wp/v2';
 const authHeader = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
 
 // ─── RankMath head validator ───────────────────────────────────────────────────
-const SCRIPT_NON_JSON = /<script(?![^>]*type=["']application\/ld\+json["'])/i;
-
+// Allowlist approach: only extracts the specific tag types we trust.
+// Anything else (style, link[rel=stylesheet], arbitrary script, etc.) is silently dropped.
 export function validateRankMathHead(head: string | null): string | null {
   if (!head || typeof head !== 'string') return null;
 
-  // Reject any executable <script> that is NOT JSON-LD
-  if (SCRIPT_NON_JSON.test(head)) {
-    console.warn('[wp.ts] RankMath head contained non-JSON-LD <script> — rejected.');
+  const allowed: string[] = [];
+
+  // <title> — plain text only
+  const titleMatch = head.match(/<title>([^<]*)<\/title>/i);
+  if (titleMatch) allowed.push(`<title>${titleMatch[1]}</title>`);
+
+  // <meta> tags — inert by spec, but strip any that sneak in an event handler
+  for (const m of head.matchAll(/<meta[^>]*\/?>/gi)) {
+    if (!/on\w+\s*=/i.test(m[0])) allowed.push(m[0]);
+  }
+
+  // <link> — canonical and alternate only, no stylesheets or preloads
+  for (const m of head.matchAll(/<link[^>]*\/?>/gi)) {
+    if (/rel=["'](?:canonical|alternate)["']/i.test(m[0]) && !/on\w+\s*=/i.test(m[0])) {
+      allowed.push(m[0]);
+    }
+  }
+
+  // <script type="application/ld+json"> — validate JSON before allowing
+  for (const m of head.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      JSON.parse(m[1]);
+      allowed.push(m[0]);
+    } catch {
+      console.warn('[wp.ts] Invalid JSON in RankMath JSON-LD block — skipped.');
+    }
+  }
+
+  if (!allowed.length) {
+    console.warn('[wp.ts] RankMath head contained no allowlisted tags — rejected.');
     return null;
   }
 
-  // Reject inline event handlers (onerror=, onclick=, etc.)
-  if (/\bon\w+\s*=/i.test(head)) {
-    console.warn('[wp.ts] RankMath head contained inline event handler — rejected.');
-    return null;
-  }
-
-  // Reject iframes, objects, embeds
-  if (/<(iframe|object|embed|form|base)\b/i.test(head)) {
-    console.warn('[wp.ts] RankMath head contained forbidden element — rejected.');
-    return null;
-  }
-
-  return head;
+  return allowed.join('\n');
 }
 
 // ─── Core fetch ───────────────────────────────────────────────────────────────

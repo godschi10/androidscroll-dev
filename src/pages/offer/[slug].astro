@@ -1,7 +1,17 @@
 ---
 export async function getStaticPaths() {
+  const WP_USER     = import.meta.env.WP_USER;
+  const WP_APP_PASS = import.meta.env.WP_APP_PASS;
+
+  if (!WP_USER || !WP_APP_PASS) {
+    throw new Error('[offer/slug] Missing WP_USER or WP_APP_PASS env vars.');
+  }
+
+  const authHeader = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
+
   const res = await fetch(
-    'https://androidscroll.com/wp-json/wp/v2/thirstylink?per_page=100&_fields=slug,meta'
+    'https://androidscroll.com/wp-json/wp/v2/thirstylink?per_page=100&_fields=slug,meta',
+    { headers: { Authorization: authHeader } }
   );
   const links = await res.json();
 

@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { getPosts, getPost, getCategories, getRankMathHead, decode} from '../lib/wp';
 import Comments from '../components/Comments.astro';
 import { createHash } from 'crypto';
+import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
   const posts = await getPosts(100);
@@ -51,6 +52,9 @@ const tocHtml = tocHeadings.length > 2 && !tocExcludedIds.includes(post.id)
 if (tocHtml) {
   contentHtml = contentHtml.replace(/<h2/, tocHtml + '<h2');
 }
+
+// Sanitize at build time — strips scripts, iframes, dangerous attrs, javascript: URLs
+contentHtml = serverSanitizeHtml(contentHtml);
 
 // breadcrumb — first category + parent if subcategory
 const bcCat = post._embedded?.['wp:term']?.[0]?.[0] || null;

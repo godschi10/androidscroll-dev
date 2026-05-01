@@ -1,7 +1,6 @@
 ---
 import '../styles/global.css';
 import '../styles/style.min.css';
-import '../styles/theme.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
 import { getPosts, getCategories, decode } from '../lib/wp';
 
@@ -456,7 +455,12 @@ const socialLinks = [
     _paq.push(['setTrackerUrl', u+'matomo.php']);
     _paq.push(['setSiteId', '1']);
     var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    g.async=true; g.src=u+'matomo.js';
+    // SRI — generate hash with: curl -s https://analytics.androidscroll.com/matomo.js | openssl dgst -sha384 -binary | openssl base64 -A
+    // Then replace the placeholder below and redeploy whenever Matomo updates.
+    g.integrity='sha384-REPLACE_WITH_YOUR_HASH';
+    g.crossOrigin='anonymous';
+    s.parentNode.insertBefore(g,s);
   })();
 </script>
 <!-- End Matomo -->
