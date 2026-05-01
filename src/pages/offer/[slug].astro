@@ -15,10 +15,29 @@ export async function getStaticPaths() {
   );
   const links = await res.json();
 
-  return links.map((link) => ({
-    params: { slug: link.slug },
-    props: { destination: link.meta._ta_destination_url },
-  }));
+  return links
+    .map((link: any) => {
+      const raw = link.meta?._ta_destination_url ?? '';
+
+      // Validate at build time — only allow http/https URLs.
+      // Blocks javascript:, data:, vbscript:, and anything non-HTTP.
+      let safeDestination = '';
+      try {
+        const u = new URL(raw);
+        if (u.protocol === 'https:' || u.protocol === 'http:') {
+          safeDestination = u.href;
+        }
+      } catch {
+        // Unparseable URL — leave safeDestination empty
+      }
+
+      return {
+        params: { slug: link.slug },
+        props: { destination: safeDestination },
+      };
+    })
+    // Drop entries where destination didn't pass validation
+    .filter((entry: any) => entry.props.destination !== '');
 }
 
 const { destination } = Astro.props;
@@ -31,7 +50,7 @@ const { destination } = Astro.props;
     <title>Redirecting...</title>
   </head>
   <body>
-    <p>Redirecting... <a href={destination}>Click here if nothing happens.</a></p>
+    <p>Redirecting... <a href={destination} rel="noopener noreferrer">Click here if nothing happens.</a></p>
     <script define:vars={{ destination }}>
       window.location.replace(destination);
     </script>

@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getPages, getPage, getRankMathHead, decode } from '../lib/wp';
+import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
   const pages = await getPages();
@@ -15,11 +16,12 @@ const rankMathHead = await getRankMathHead(page.slug);
 
 const title = decode(page.title.rendered.replace(/<[^>]+>/g, ''));
 const description = decode(page.excerpt?.rendered?.replace(/<[^>]+>/g, '').trim() ?? '');
+const safeContent = serverSanitizeHtml(page.content.rendered);
 ---
 
 <Layout title={title} description={description} rankMathHead={rankMathHead}>
   <article style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
-    <h1 style="margin-bottom:1em;" set:html={page.title.rendered}></h1>
-    <div class="post-content" set:html={page.content.rendered}></div>
+    <h1 style="margin-bottom:1em;" set:html={page.title.rendered.replace(/<[^>]+>/g, '')}></h1>
+    <div class="post-content" set:html={safeContent}></div>
   </article>
 </Layout>
