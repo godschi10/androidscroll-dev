@@ -26,10 +26,10 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   'source': new Set(['srcset', 'media', 'type', 'sizes']),
   'td':     new Set(['colspan', 'rowspan']),
   'th':     new Set(['colspan', 'rowspan', 'scope']),
-  '*':      new Set(['class', 'id', 'style']),
+  '*':      new Set(['class']),
 };
 
-const BLOCKED_CSS = /expression\s*\(|javascript\s*:|behavior\s*:|moz-binding|url\s*\(/i;
+const BLOCKED_CSS = /expression\s*\(|javascript\s*:|behavior\s*:|moz-binding|url\s*\(|position\s*:\s*(fixed|absolute)|z-index\s*:\s*[1-9]\d{3,}|opacity\s*:\s*0/i;
 
 function sanitizeNode(node: Node): void {
   const toRemove: Node[] = [];
