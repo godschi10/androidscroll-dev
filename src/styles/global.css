@@ -495,7 +495,7 @@ p.first-p { margin-top: 0px !important; }
 .cab-more-link { font-family: var(--font-heading); font-size: 14px; font-weight: 600; color: var(--brand-primary); text-decoration: none; }
 .cab-more-link:hover { color: var(--brand-hover); }
 .cab-socials { display: flex; gap: 12px; align-items: center; }
-.cab-social-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #f4f6f7; transition: all 0.3s ease; }
+.cab-social-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-surface-2); transition: all 0.3s ease; }
 .cab-social-icon svg { width: 14px; height: 14px; fill: #666; }
 .cab-social-icon:hover { transform: translateY(-2px); }
 @media (max-width: 768px) {
