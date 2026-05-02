@@ -971,17 +971,3 @@ pre{margin: 0 0 40px;
     .as-sf-sub { font-family: var(--font-body); font-size: 11px; color: var(--text-muted); }
     .as-sf-cta { flex-shrink: 0; background: #F5A623; color: #fff; font-family: var(--font-body); font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: var(--radius-main); white-space: nowrap; transition: background 0.18s; }
     .as-sf-inner:hover .as-sf-cta { background: #e6951a; }
-    
-    
-    
-    
-    
-    
- 
-/* ==========================================================================
-   19. MATOMO OPT-OUT WIDGET
-   ========================================================================== */
-#matomo-opt-out { margin: 24px 0; }
-#matomo-opt-out p { color: var(--text-main); font-size: 15px; line-height: 1.6; }
-#matomo-opt-out label { color: var(--text-main); font-size: 15px; cursor: pointer; }
-#matomo-opt-out input[type="checkbox"] { accent-color: var(--brand-primary); width: 16px; height: 16px; cursor: pointer; }
