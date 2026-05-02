@@ -971,3 +971,46 @@ pre{margin: 0 0 40px;
     .as-sf-sub { font-family: var(--font-body); font-size: 11px; color: var(--text-muted); }
     .as-sf-cta { flex-shrink: 0; background: #F5A623; color: #fff; font-family: var(--font-body); font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: var(--radius-main); white-space: nowrap; transition: background 0.18s; }
     .as-sf-inner:hover .as-sf-cta { background: #e6951a; }
+    
+    
+    
+    
+    
+    
+    /* ==========================================================================
+   19. MATOMO OPT-OUT WIDGET
+   ========================================================================== */
+#matomo-optout {
+  margin: 24px 0;
+  padding: 20px 24px;
+  background: var(--brand-light);
+  border: 1px solid var(--brand-primary);
+  border-radius: 10px;
+  font-family: var(--font-body);
+}
+
+#optout-status {
+  margin: 0 0 14px;
+  font-size: 15px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+#optout-btn {
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-main);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.2s;
+}
+
+#optout-btn:hover { background: var(--brand-hover); }
+
+/* JS adds this class when opted out */
+#optout-btn.is-opted-out { background: var(--text-muted); }
+#optout-btn.is-opted-out:hover { background: var(--text-main); }
