@@ -32,6 +32,15 @@ const navCategories = parents.map((p: any) => ({
 }));
 
 const { title, description, cover, coverAlt, type = 'website', rankMathHead = null, noindex = false, commentSchema = null, pageSchema = null } = Astro.props;
+
+// Sanitize RankMath head — strip any scripts that are not JSON-LD, remove event handlers and javascript: URLs
+const safeRankMathHead = rankMathHead
+  ? rankMathHead
+      .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/javascript\s*:/gi, '')
+  : null;
+
 const siteUrl = 'https://androidscroll.com';
 const siteName = 'AndroidScroll';
 const defaultDescription = 'Android tips, tricks and guides';
@@ -72,13 +81,16 @@ const socialLinks = [
   <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
   <link rel="apple-touch-icon" href="/AndroidScroll-Favicon.png" />
 
-  {rankMathHead ? (
-    <Fragment set:html={rankMathHead} />
+  {(!safeRankMathHead || !safeRankMathHead.includes('name="description"')) && (
+    <meta name="description" content={metaDescription} />
+  )}
+
+  {safeRankMathHead ? (
+    <Fragment set:html={safeRankMathHead} />
   ) : (
     <>
       <link rel="canonical" href={canonicalURL} />
       <title>{metaTitle}</title>
-      <meta name="description" content={metaDescription} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={canonicalURL} />
