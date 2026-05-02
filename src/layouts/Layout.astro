@@ -2,9 +2,9 @@
 import '../styles/global.css';
 import '../styles/style.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
-import { getPosts, getCategories, decode } from '../lib/wp';
+import { getAllPosts, getCategories, decode } from '../lib/wp';
 
-const wpPosts = await getPosts(100);
+const wpPosts = await getAllPosts();
 const posts = wpPosts.map((p: any) => ({
   id: p.slug,
   slug: p.slug,
@@ -80,6 +80,7 @@ const socialLinks = [
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
   <link rel="apple-touch-icon" href="/AndroidScroll-Favicon.png" />
+  <link rel="sitemap" href="/sitemap.xml" />
 
   {(!safeRankMathHead || !safeRankMathHead.includes('name="description"')) && (
     <meta name="description" content={metaDescription} />

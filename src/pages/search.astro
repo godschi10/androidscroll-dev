@@ -1,8 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getPosts, decode, excerpt } from '../lib/wp';
+import { getAllPosts, decode, excerpt } from '../lib/wp';
 
-const wpPosts = await getPosts(100);
+const wpPosts = await getAllPosts();
 const searchData = JSON.stringify(wpPosts.map((p: any) => ({
   slug: p.slug,
   title: decode(p.title.rendered.replace(/<[^>]+>/g,'')),

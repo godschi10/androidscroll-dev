@@ -66,12 +66,72 @@ const wpFetch = async (url: string): Promise<any> => {
 };
 
 // ─── API functions ────────────────────────────────────────────────────────────
-export const getPosts           = (n = 100) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`));
+export const getPosts           = (n: number) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`));
+
+// Paginated — fetches every published post regardless of count. Use this everywhere
+// you need the full post list. getPosts(n) stays for intentional display limits (e.g. 12, 50).
+export const getAllPosts = () => cached('all-posts', async () => {
+  const all: any[] = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${API}/posts?per_page=100&page=${page}&_embed&status=publish`, { headers: { Authorization: authHeader } });
+    if (!res.ok) break;
+    const batch: any[] = await res.json();
+    if (!batch.length) break;
+    all.push(...batch);
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
+    if (page >= totalPages) break;
+    page++;
+  }
+  return all;
+});
 export const getPost            = (s: string) => wpFetch(`${API}/posts?slug=${encodeURIComponent(s)}&_embed`).then((a: any[]) => a[0]);
-export const getCategories      = () => cached('category', () => wpFetch(`${API}/categories?per_page=100&hide_empty=true`));
-export const getPostsByCategory = (id: number, n = 100) => wpFetch(`${API}/posts?categories=${id}&per_page=${n}&_embed`);
+export const getCategories = () => cached('category', async () => {
+  const all: any[] = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${API}/categories?per_page=100&page=${page}&hide_empty=true`, { headers: { Authorization: authHeader } });
+    if (!res.ok) break;
+    const batch: any[] = await res.json();
+    if (!batch.length) break;
+    all.push(...batch);
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
+    if (page >= totalPages) break;
+    page++;
+  }
+  return all;
+});
+export const getPostsByCategory = (id: number) => cached(`posts-by-cat-${id}`, async () => {
+  const all: any[] = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${API}/posts?categories=${id}&per_page=100&page=${page}&_embed`, { headers: { Authorization: authHeader } });
+    if (!res.ok) break;
+    const batch: any[] = await res.json();
+    if (!batch.length) break;
+    all.push(...batch);
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
+    if (page >= totalPages) break;
+    page++;
+  }
+  return all;
+});
 export const getCategoryBySlug  = (slug: string) => wpFetch(`${API}/categories?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
-export const getPages           = () => cached('pages', () => wpFetch(`${API}/pages?per_page=100`));
+export const getPages = () => cached('pages', async () => {
+  const all: any[] = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${API}/pages?per_page=100&page=${page}`, { headers: { Authorization: authHeader } });
+    if (!res.ok) break;
+    const batch: any[] = await res.json();
+    if (!batch.length) break;
+    all.push(...batch);
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
+    if (page >= totalPages) break;
+    page++;
+  }
+  return all;
+});
 export const getPage            = (slug: string) => wpFetch(`${API}/pages?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
 
 export const getPostSeo = async (slug: string) => {

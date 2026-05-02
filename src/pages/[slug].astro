@@ -1,18 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getPosts, getPost, getCategories, getRankMathHead, decode} from '../lib/wp';
+import { getAllPosts, getPosts, getPost, getCategories, getRankMathHead, decode} from '../lib/wp';
 import Comments from '../components/Comments.astro';
 import { createHash } from 'crypto';
 import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
-  const posts = await getPosts(100);
+  const posts = await getAllPosts();
   return posts.map(p => ({ params: { slug: p.slug } }));
 }
 
 const post = await getPost(Astro.params.slug);
 if (!post) return Astro.redirect('/404');
 const rankMathHead = await getRankMathHead(post.slug);
+if (!rankMathHead) console.warn(`[SEO] RankMath returned null for: ${post.slug} — fallback meta in use, no schema injected`);
 const allCats = await getCategories();
 
 const title = decode(post.title.rendered.replace(/<[^>]+>/g,''));
