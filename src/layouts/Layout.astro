@@ -31,7 +31,7 @@ const navCategories = parents.map((p: any) => ({
     .map((c: any) => ({ ...c, name: decode(c.name) })),
 }));
 
-const { title, description, cover, coverAlt, type = 'website', rankMathHead = null, noindex = false, commentSchema = null, pageSchema = null } = Astro.props;
+const { title, description, cover, coverAlt, coverWidth = null, coverHeight = null, type = 'website', rankMathHead = null, noindex = false, commentSchema = null, pageSchema = null } = Astro.props;
 
 // Sanitize RankMath head — strip any scripts that are not JSON-LD, remove event handlers and javascript: URLs
 const safeRankMathHead = rankMathHead
@@ -98,14 +98,19 @@ const socialLinks = [
       <meta property="og:site_name" content={siteName} />
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
-      <meta property="og:image" content={metaImage} />
-      <meta property="og:image:alt" content={metaImageAlt} />
-      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={metaTitle} />
       <meta name="twitter:description" content={metaDescription} />
-      <meta name="twitter:image" content={metaImage} />
     </>
   )}
+
+  {/* og:image — always explicit so scrapers never have to infer it,
+      even when RankMath injects the rest of the OG block */}
+  <meta property="og:image" content={metaImage} />
+  <meta property="og:image:alt" content={metaImageAlt} />
+  {cover && coverWidth  && <meta property="og:image:width"  content={String(coverWidth)} />}
+  {cover && coverHeight && <meta property="og:image:height" content={String(coverHeight)} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content={metaImage} />
 
   {commentSchema && (
     <script type="application/ld+json" set:html={commentSchema} />
