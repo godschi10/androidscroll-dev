@@ -59,8 +59,10 @@ export const GET: APIRoute = async () => {
   ];
 
   // WP pages (start-here, privacy-policy, any future pages) — fully dynamic
+  // Slugs matching robots.txt Disallow rules are excluded from the sitemap
+  const DISALLOWED_SLUGS = new Set(['offer', 'search', 'subscribe']);
   const wpPageEntries = (pages as any[])
-    .filter((p: any) => p.status === 'publish' && p.slug !== 'home')
+    .filter((p: any) => p.status === 'publish' && p.slug !== 'home' && !DISALLOWED_SLUGS.has(p.slug))
     .map((p: any) => urlEntry(`${SITE}/${p.slug}/`, p.modified?.split('T')[0]));
 
   // All posts — no cap, paginated above
