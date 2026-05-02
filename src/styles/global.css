@@ -978,33 +978,10 @@ pre{margin: 0 0 40px;
     
     
  
-    /* Matomo opt-out widget */
-    #matomo-optout {
-      margin: 24px 0;
-      padding: 20px 24px;
-      background: var(--brand-light);
-      border: 1px solid var(--brand-primary);
-      border-radius: 10px;
-      font-family: var(--font-body);
-    }
-    #optout-status {
-      margin: 0 0 14px;
-      font-size: 15px;
-      color: var(--text-main);
-      line-height: 1.5;
-    }
-    #optout-btn {
-      background: var(--brand-primary);
-      color: #fff;
-      border: none;
-      padding: 10px 22px;
-      border-radius: var(--radius-main);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: background 0.2s;
-    }
-    #optout-btn:hover { background: var(--brand-hover); }
-    #optout-btn.is-opted-out { background: var(--text-muted); }
-    #optout-btn.is-opted-out:hover { background: var(--text-main); }
+/* ==========================================================================
+   19. MATOMO OPT-OUT WIDGET
+   ========================================================================== */
+#matomo-opt-out { margin: 24px 0; }
+#matomo-opt-out p { color: var(--text-main); font-size: 15px; line-height: 1.6; }
+#matomo-opt-out label { color: var(--text-main); font-size: 15px; cursor: pointer; }
+#matomo-opt-out input[type="checkbox"] { accent-color: var(--brand-primary); width: 16px; height: 16px; cursor: pointer; }
