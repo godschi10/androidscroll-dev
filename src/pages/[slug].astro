@@ -117,7 +117,7 @@ const commentSchema = buildComments.length > 0 ? JSON.stringify({
   }))
 }) : null;
 ---
-<Layout title={title} description={description} cover={cover} type="article" rankMathHead={rankMathHead} commentSchema={commentSchema}>
+<Layout title={title} description={description} cover={cover} coverAlt={coverAlt} coverWidth={coverWidth} coverHeight={coverHeight} type="article" rankMathHead={rankMathHead} commentSchema={commentSchema}>
   <div class="as-progress-container"><div class="as-progress-bar" id="as-progress-bar"></div></div>
   <article style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
     <!-- Breadcrumb + category pill merged -->

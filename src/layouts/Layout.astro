@@ -33,36 +33,35 @@ const navCategories = parents.map((p: any) => ({
 
 const { title, description, cover, coverAlt, coverWidth = null, coverHeight = null, type = 'website', rankMathHead = null, noindex = false, commentSchema = null, pageSchema = null } = Astro.props;
 
-// Sanitize RankMath head — strip any scripts that are not JSON-LD, remove event handlers and javascript: URLs.
-// IMPORTANT: The naive [\s\S]*?<\/script> approach breaks on JSON-LD blobs that contain the
-// escaped sequence <\/script> inside their JSON strings — the regex stops there prematurely,
-// leaving the rest of the JSON as raw text in <head> and confusing Facebook's OG parser.
-// Solution: excise only non-JSON-LD <script>...</script> blocks, leave everything else intact.
+// Sanitize RankMath head — strip non-JSON-LD scripts, remove event handlers and javascript: URLs.
+// WARNING: Do NOT use a regex like [\s\S]*?<\/script> here — RankMath's JSON-LD blob contains
+// the escaped sequence <\/script> inside its JSON strings, which causes the regex to terminate
+// the match early, leaving the rest of the JSON as raw text in <head> and breaking FB/OG parsers.
+// Instead we walk the string with indexOf so escaped slashes in JSON are never mistaken for tags.
 function sanitizeRankMathHead(raw: string): string {
   let result = '';
   let remaining = raw;
   while (remaining.length > 0) {
     const start = remaining.search(/<script[\s>]/i);
     if (start === -1) { result += remaining; break; }
-    // Preserve everything before this script tag
+    // Everything before this script tag is safe — keep it
     result += remaining.slice(0, start);
     remaining = remaining.slice(start);
-    // Find end of opening tag
+    // Find the end of the opening <script ...> tag
     const openEnd = remaining.indexOf('>');
     if (openEnd === -1) { result += remaining; break; }
     const openTag = remaining.slice(0, openEnd + 1);
-    // Find closing </script> — search as lowercase to handle case variance
+    // Find the real closing </script> using indexOf (not regex) so <\/script> in JSON is skipped
     const closeTag = '</script>';
     const closeIdx = remaining.toLowerCase().indexOf(closeTag, openEnd + 1);
     if (closeIdx === -1) { result += remaining; break; }
     const fullBlock = remaining.slice(0, closeIdx + closeTag.length);
     remaining = remaining.slice(closeIdx + closeTag.length);
-    // Keep JSON-LD scripts only
+    // Keep JSON-LD scripts only; silently drop anything else (analytics, etc.)
     const isJsonLd = /type=["']application\/ld\+json["']/i.test(openTag);
     if (isJsonLd) result += fullBlock;
-    // Non-JSON-LD scripts are silently dropped
   }
-  // Strip event handlers and javascript: URLs from meta/link tags
+  // Strip event handlers and javascript: URLs from the meta/link tags
   return result
     .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
     .replace(/javascript\s*:/gi, '');
@@ -131,12 +130,12 @@ const socialLinks = [
     </>
   )}
 
-  {/* og:image — always explicit so scrapers never have to infer it,
-      even when RankMath injects the rest of the OG block */}
+  {/* og:image — always rendered unconditionally so FB/scrapers never have to infer it,
+      regardless of whether RankMath fires or not */}
   <meta property="og:image" content={metaImage} />
   <meta property="og:image:alt" content={metaImageAlt} />
-  {cover && coverWidth  && <meta property="og:image:width"  content={String(coverWidth)} />}
-  {cover && coverHeight && <meta property="og:image:height" content={String(coverHeight)} />}
+  {coverWidth  && <meta property="og:image:width"  content={String(coverWidth)} />}
+  {coverHeight && <meta property="og:image:height" content={String(coverHeight)} />}
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content={metaImage} />
 
