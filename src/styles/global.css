@@ -266,7 +266,7 @@ layout{margin-top:30px !important}
 
 /* Tables */
 .post-content table {
-  display: block;
+/*  display: block;*/
   width: 100%;
   overflow-x: auto;
   margin: 30px 0;
@@ -602,6 +602,8 @@ padding: 10px;
 pre{margin: 0 0 40px;
   border:1px solid var(--border-light)!important;
 }
+
+.wp-block-code code{padding: 10px;}
 
 /* ==========================================================================
    15. READING PROGRESS BAR
