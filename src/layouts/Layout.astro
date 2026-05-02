@@ -33,13 +33,41 @@ const navCategories = parents.map((p: any) => ({
 
 const { title, description, cover, coverAlt, coverWidth = null, coverHeight = null, type = 'website', rankMathHead = null, noindex = false, commentSchema = null, pageSchema = null } = Astro.props;
 
-// Sanitize RankMath head — strip any scripts that are not JSON-LD, remove event handlers and javascript: URLs
-const safeRankMathHead = rankMathHead
-  ? rankMathHead
-      .replace(/<script(?![^>]*type=["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
-      .replace(/javascript\s*:/gi, '')
-  : null;
+// Sanitize RankMath head — strip any scripts that are not JSON-LD, remove event handlers and javascript: URLs.
+// IMPORTANT: The naive [\s\S]*?<\/script> approach breaks on JSON-LD blobs that contain the
+// escaped sequence <\/script> inside their JSON strings — the regex stops there prematurely,
+// leaving the rest of the JSON as raw text in <head> and confusing Facebook's OG parser.
+// Solution: excise only non-JSON-LD <script>...</script> blocks, leave everything else intact.
+function sanitizeRankMathHead(raw: string): string {
+  let result = '';
+  let remaining = raw;
+  while (remaining.length > 0) {
+    const start = remaining.search(/<script[\s>]/i);
+    if (start === -1) { result += remaining; break; }
+    // Preserve everything before this script tag
+    result += remaining.slice(0, start);
+    remaining = remaining.slice(start);
+    // Find end of opening tag
+    const openEnd = remaining.indexOf('>');
+    if (openEnd === -1) { result += remaining; break; }
+    const openTag = remaining.slice(0, openEnd + 1);
+    // Find closing </script> — search as lowercase to handle case variance
+    const closeTag = '</script>';
+    const closeIdx = remaining.toLowerCase().indexOf(closeTag, openEnd + 1);
+    if (closeIdx === -1) { result += remaining; break; }
+    const fullBlock = remaining.slice(0, closeIdx + closeTag.length);
+    remaining = remaining.slice(closeIdx + closeTag.length);
+    // Keep JSON-LD scripts only
+    const isJsonLd = /type=["']application\/ld\+json["']/i.test(openTag);
+    if (isJsonLd) result += fullBlock;
+    // Non-JSON-LD scripts are silently dropped
+  }
+  // Strip event handlers and javascript: URLs from meta/link tags
+  return result
+    .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/javascript\s*:/gi, '');
+}
+const safeRankMathHead = rankMathHead ? sanitizeRankMathHead(rankMathHead) : null;
 
 const siteUrl = 'https://androidscroll.com';
 const siteName = 'AndroidScroll';
