@@ -26,14 +26,16 @@ export function validateRankMathHead(head: string | null): string | null {
   const titleMatch = head.match(/<title>([^<]*)<\/title>/i);
   if (titleMatch) allowed.push(`<title>${titleMatch[1]}</title>`);
 
-  // <meta> tags — inert by spec, but strip any that sneak in an event handler
+  // <meta> tags — inert by spec, but strip any that sneak in an event handler.
+  // NOTE: must use \bon\w+ (word boundary) — without it, 'content=' falsely matches
+  // as 'ontent=' satisfies on\w+=, which blocks every single meta tag.
   for (const m of head.matchAll(/<meta[^>]*\/?>/gi)) {
-    if (!/on\w+\s*=/i.test(m[0])) allowed.push(m[0]);
+    if (!/\bon\w+\s*=/i.test(m[0])) allowed.push(m[0]);
   }
 
   // <link> — canonical and alternate only, no stylesheets or preloads
   for (const m of head.matchAll(/<link[^>]*\/?>/gi)) {
-    if (/rel=["'](?:canonical|alternate)["']/i.test(m[0]) && !/on\w+\s*=/i.test(m[0])) {
+    if (/rel=["'](?:canonical|alternate)["']/i.test(m[0]) && !/\bon\w+\s*=/i.test(m[0])) {
       allowed.push(m[0]);
     }
   }
