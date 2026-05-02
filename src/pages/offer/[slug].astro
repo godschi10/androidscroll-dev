@@ -9,11 +9,23 @@ export async function getStaticPaths() {
 
   const authHeader = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
 
-  const res = await fetch(
-    'https://androidscroll.com/wp-json/wp/v2/thirstylink?per_page=100&_fields=slug,meta',
-    { headers: { Authorization: authHeader } }
-  );
-  const links = await res.json();
+  // Paginated — fetches all affiliate links regardless of count
+  const allLinks: any[] = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(
+      `https://androidscroll.com/wp-json/wp/v2/thirstylink?per_page=100&page=${page}&_fields=slug,meta`,
+      { headers: { Authorization: authHeader } }
+    );
+    if (!res.ok) break;
+    const batch = await res.json();
+    if (!batch.length) break;
+    allLinks.push(...batch);
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
+    if (page >= totalPages) break;
+    page++;
+  }
+  const links = allLinks;
 
   return links
     .map((link: any) => {

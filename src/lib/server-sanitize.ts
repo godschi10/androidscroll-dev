@@ -1,50 +1,88 @@
 /**
  * server-sanitize.ts — Build-time HTML sanitizer for WordPress post content.
  *
- * Runs in Node at build time (no DOM available). Defends against stored XSS
- * baked into static output if WordPress is ever compromised.
- *
- * WordPress already applies wp_kses_post server-side, so this is a second
- * layer — it strips the attack vectors that matter most for a static site:
- * executable tags, dangerous attributes, and protocol-based injection.
+ * Uses sanitize-html (htmlparser2-backed) instead of regex so malformed or
+ * nested tags cannot bypass the rules. Runs in Node at build time.
+ * WordPress already applies wp_kses_post server-side — this is the second layer.
  */
+import sanitizeHtml from 'sanitize-html';
 
-// Tags stripped entirely, content included (unwrapped)
-const STRIP_WITH_CONTENT = [
-  /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,
-  /<style\b[^>]*>[\s\S]*?<\/style\s*>/gi,
-  /<iframe\b[^>]*>[\s\S]*?<\/iframe\s*>/gi,
-  /<object\b[^>]*>[\s\S]*?<\/object\s*>/gi,
-  /<embed\b[^>]*[\s/>]*>/gi,
-  /<form\b[^>]*>[\s\S]*?<\/form\s*>/gi,
-  /<base\b[^>]*>/gi,
-  // Strip <link> tags — post content should never need to load stylesheets
-  /<link\b[^>]*>/gi,
-  // Strip HTML comments — used to hide payloads and IE conditional blocks
-  /<!--[\s\S]*?-->/g,
+// Tags whose content is also dropped entirely
+const DISCARD_TAGS = [
+  'script', 'style', 'iframe', 'object', 'embed',
+  'form', 'base', 'link', 'noscript', 'template',
 ];
 
-// Dangerous attributes stripped from any remaining tag
-const DANGEROUS_ATTR =
-  /\s+(?:on\w+|srcdoc|formaction|action|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi;
+// Tags stripped but content kept (unwrapped)
+const STRIP_TAGS = [
+  'html', 'body', 'head',
+  'meta', 'title',
+];
 
-// href/src values that use dangerous protocols
-const DANGEROUS_HREF =
-  /(\s+href\s*=\s*["'])(?:\s*(?:javascript|vbscript|data)\s*:)[^"']*/gi;
-const DANGEROUS_SRC =
-  /(\s+src\s*=\s*["'])(?:\s*(?:javascript|vbscript|data)\s*:)[^"']*/gi;
+// Every tag WordPress Gutenberg legitimately outputs
+const ALLOWED_TAGS = [
+  'a', 'b', 'strong', 'i', 'em', 'u', 's', 'del', 'ins', 'mark',
+  'small', 'sub', 'sup', 'abbr', 'cite', 'q', 'kbd', 'samp', 'var',
+  'p', 'br', 'hr', 'wbr',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+  'blockquote', 'pre', 'code',
+  'div', 'span', 'section', 'article', 'aside', 'main', 'header', 'footer', 'nav',
+  'figure', 'figcaption', 'picture', 'source', 'img',
+  'video', 'audio', 'track',
+  'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+  'details', 'summary',
+  'svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'text', 'g', 'use', 'defs',
+];
 
 export function serverSanitizeHtml(html: string): string {
-  let out = html;
+  return sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
 
-  for (const re of STRIP_WITH_CONTENT) {
-    out = out.replace(re, '');
-  }
+    // Attributes allowed per tag — nothing on this list can execute code
+    allowedAttributes: {
+      '*':       ['class', 'id', 'style', 'data-*', 'aria-*', 'role', 'tabindex'],
+      'a':       ['href', 'title', 'target', 'rel', 'name'],
+      'img':     ['src', 'srcset', 'alt', 'width', 'height', 'loading', 'decoding', 'fetchpriority', 'sizes'],
+      'source':  ['srcset', 'src', 'media', 'type', 'sizes'],
+      'video':   ['src', 'controls', 'width', 'height', 'poster', 'preload', 'loop', 'muted', 'autoplay'],
+      'audio':   ['src', 'controls', 'preload', 'loop', 'muted', 'autoplay'],
+      'track':   ['kind', 'src', 'srclang', 'label', 'default'],
+      'td':      ['colspan', 'rowspan', 'headers'],
+      'th':      ['colspan', 'rowspan', 'scope', 'headers'],
+      'col':     ['span'],
+      'colgroup':['span'],
+      'blockquote': ['cite'],
+      'svg':     ['xmlns', 'viewBox', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'aria-hidden', 'focusable'],
+      'path':    ['d', 'fill', 'stroke', 'stroke-width', 'fill-rule', 'clip-rule'],
+      'circle':  ['cx', 'cy', 'r', 'fill', 'stroke'],
+      'rect':    ['x', 'y', 'width', 'height', 'rx', 'ry', 'fill', 'stroke'],
+      'use':     ['href'],
+    },
 
-  out = out
-    .replace(DANGEROUS_ATTR, '')
-    .replace(DANGEROUS_HREF, '$1#')
-    .replace(DANGEROUS_SRC,  '$1');
+    // Only http/https/mailto/tel — blocks javascript:, data:, vbscript:
+    allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+    allowedSchemesByTag: {
+      img:    ['http', 'https', 'data'],  // data: allowed for inline images only
+      source: ['http', 'https'],
+    },
 
-  return out;
+    // Force rel on all external links, no target injection
+    transformTags: {
+      'a': (tagName, attribs) => ({
+        tagName,
+        attribs: {
+          ...attribs,
+          rel: 'noopener noreferrer',
+          ...(attribs.href?.startsWith('http') && !attribs.href.startsWith('https://androidscroll.com')
+            ? { target: '_blank' }
+            : {}),
+        },
+      }),
+    },
+
+    // Completely discard dangerous tags and their content
+    disallowedTagsMode: 'discard',
+    exclusiveFilter: (frame) => DISCARD_TAGS.includes(frame.tag),
+  });
 }
