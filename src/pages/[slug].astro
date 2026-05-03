@@ -1,18 +1,25 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getAllPosts, getPosts, getPost, getCategories, getRankMathHead, decode} from '../lib/wp';
+import { getAllPosts, getPosts, getCategories, getRankMathHead, getComments, decode} from '../lib/wp';
 import Comments from '../components/Comments.astro';
 import { createHash } from 'crypto';
 import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
   const posts = await getAllPosts();
-  return posts.map(p => ({ params: { slug: p.slug } }));
+  // Batch all per-post fetches in parallel — avoids N sequential requests at build time
+  const [heads, commentsArr] = await Promise.all([
+    Promise.all(posts.map(p => getRankMathHead(p.slug))),
+    Promise.all(posts.map(p => getComments(p.id))),
+  ]);
+  return posts.map((p, i) => ({
+    params: { slug: p.slug },
+    props: { post: p, rankMathHead: heads[i], buildComments: commentsArr[i] },
+  }));
 }
 
-const post = await getPost(Astro.params.slug);
+const { post, rankMathHead, buildComments } = Astro.props;
 if (!post) return Astro.redirect('/404');
-const rankMathHead = await getRankMathHead(post.slug);
 if (!rankMathHead) console.warn(`[SEO] RankMath returned null for: ${post.slug} — fallback meta in use, no schema injected`);
 const allCats = await getCategories();
 
@@ -87,9 +94,7 @@ const safeAuthorUrl = (url: string | undefined): string => {
   }
 };
 
-// Fetch comments at build time for schema (UI still lazy-loads via Comments.astro)
-const commentsRes = await fetch(`https://androidscroll.com/wp-json/wp/v2/comments?post=${post.id}&per_page=100&orderby=date&order=asc`).catch(() => null);
-const buildComments = commentsRes?.ok ? await commentsRes.json().catch(() => []) : [];
+// Comments come from props (batched in getStaticPaths)
 
 const commentSchema = buildComments.length > 0 ? JSON.stringify({
   "@context": "https://schema.org",

@@ -136,6 +136,12 @@ export const getPages = () => cached('pages', async () => {
 });
 export const getPage            = (slug: string) => wpFetch(`${API}/pages?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
 
+// Authenticated comments fetch — used in getStaticPaths batch, no cache needed (called once per post)
+export const getComments = (postId: number): Promise<any[]> =>
+  fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`, { headers: { Authorization: authHeader } })
+    .then(r => r.ok ? r.json() : [])
+    .catch(() => []);
+
 export const getPostSeo = async (slug: string) => {
   const res = await wpFetch(`${API}/posts?slug=${encodeURIComponent(slug)}&_fields=id,slug,yoast_head_json,rank_math_head`);
   return res[0] ?? null;
