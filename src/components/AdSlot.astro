@@ -1,5 +1,22 @@
 ---
-import { ADSENSE_ENABLED, ADSENSE_CLIENT, ADSENSE_SLOT } from '../lib/config';
+import { ADSENSE_ENABLED, ADSENSE_CLIENT, ADSENSE_SLOTS, type AdSlotName } from '../lib/config';
+
+interface Props {
+  /**
+   * Which named slot to render. Must match a key in ADSENSE_SLOTS in config.ts.
+   * Examples:
+   *   <AdSlot slot="inArticle" />          — between paragraphs in a post
+   *   <AdSlot slot="sidebar" />            — desktop sidebar rectangle
+   *   <AdSlot slot="belowPost" />          — after post content / bottom of Layout
+   *   <AdSlot slot="inFeed" format="fluid" /> — inside a post listing
+   */
+  slot: AdSlotName;
+  /** AdSense data-ad-format value. Defaults to "auto". Use "fluid" for in-feed units. */
+  format?: string;
+}
+
+const { slot, format = 'auto' } = Astro.props;
+const slotId = ADSENSE_SLOTS[slot];
 ---
 
 {ADSENSE_ENABLED && (
@@ -8,8 +25,8 @@ import { ADSENSE_ENABLED, ADSENSE_CLIENT, ADSENSE_SLOT } from '../lib/config';
       class="adsbygoogle"
       style="display:block"
       data-ad-client={ADSENSE_CLIENT}
-      data-ad-slot={ADSENSE_SLOT}
-      data-ad-format="auto"
+      data-ad-slot={slotId}
+      data-ad-format={format}
       data-full-width-responsive="true"
     ></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
