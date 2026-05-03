@@ -2,7 +2,9 @@
 import '../styles/global.css';
 import '../styles/style.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
+import AdSlot from '../components/AdSlot.astro';
 import { getAllPosts, getCategories, decode } from '../lib/wp';
+import { ADSENSE_ENABLED, ADSENSE_CLIENT } from '../lib/config';
 
 const wpPosts = await getAllPosts();
 const posts = wpPosts.map((p: any) => ({
@@ -154,6 +156,13 @@ const socialLinks = [
     @font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/inter-v20-latin-600.woff2') format('woff2'); }
   </style>
 
+{ADSENSE_ENABLED && (
+  <script
+    async
+    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+    crossorigin="anonymous"
+  ></script>
+)}
 
 </head>
 <body>
@@ -351,6 +360,9 @@ const socialLinks = [
 <!-- Matomo -->
 <script src="/js/matomo-init.js" async></script>
 <!-- End Matomo -->
+
+<!-- AdSense slot — dormant until ADSENSE_ENABLED = true in src/lib/config.ts -->
+<AdSlot />
 
 </body>
 </html>

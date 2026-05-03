@@ -1,0 +1,17 @@
+---
+import { ADSENSE_ENABLED, ADSENSE_CLIENT, ADSENSE_SLOT } from '../lib/config';
+---
+
+{ADSENSE_ENABLED && (
+  <div class="as-ad-slot" style="min-height:280px;">
+    <ins
+      class="adsbygoogle"
+      style="display:block"
+      data-ad-client={ADSENSE_CLIENT}
+      data-ad-slot={ADSENSE_SLOT}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    ></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+)}

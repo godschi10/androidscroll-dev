@@ -5,7 +5,7 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://analytics.androidscroll.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self'; connect-src 'self' https://androidscroll.com https://*.workers.dev https://analytics.androidscroll.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://analytics.androidscroll.com https://pagead2.googlesyndication.com https://partner.googleadservices.com https://adservice.google.com https://www.googletagservices.com https://securepubads.g.doubleclick.net https://tpc.googlesyndication.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://www.gstatic.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://androidscroll.com https://*.workers.dev https://analytics.androidscroll.com https://*.googlesyndication.com https://*.doubleclick.net https://adservice.google.com; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 
 /fonts/*
