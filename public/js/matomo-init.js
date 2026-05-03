@@ -1,0 +1,20 @@
+var _paq = window._paq = window._paq || [];
+_paq.push(['disableCookies']);
+_paq.push(['setDoNotTrack', true]);
+_paq.push(["setExcludedReferrers", ["androidscroll.com","analytics.androidscroll.com"]]);
+_paq.push(['enableLinkTracking']);
+_paq.push(['enableHeartBeatTimer', 5]);
+function trackAstroPage() {
+  _paq.push(['setCustomUrl', window.location.href]);
+  _paq.push(['setDocumentTitle', document.title]);
+  _paq.push(['trackPageView']);
+}
+trackAstroPage();
+document.addEventListener('astro:page-load', trackAstroPage);
+(function() {
+  var u="//analytics.androidscroll.com/";
+  _paq.push(['setTrackerUrl', u+'matomo.php']);
+  _paq.push(['setSiteId', '1']);
+  var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+  g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+})();
