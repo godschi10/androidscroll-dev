@@ -4,7 +4,13 @@ _paq.push(['setDoNotTrack', true]);
 _paq.push(["setExcludedReferrers", ["androidscroll.com","analytics.androidscroll.com"]]);
 _paq.push(['enableLinkTracking']);
 _paq.push(['enableHeartBeatTimer', 5]);
+
+function _matomoIsOptedOut() {
+  return /(?:^|;)\s*mtm_consent_removed=/.test(document.cookie);
+}
+
 function trackAstroPage() {
+  if (_matomoIsOptedOut()) return;
   _paq.push(['setCustomUrl', window.location.href]);
   _paq.push(['setDocumentTitle', document.title]);
   _paq.push(['trackPageView']);
