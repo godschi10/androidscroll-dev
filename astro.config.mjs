@@ -10,7 +10,7 @@ export default defineConfig({
     defaultStrategy: 'hover',
   },
   build: {
-    inlineStylesheets: 'always', // change from 'auto'
+    inlineStylesheets: 'always', // changed from 'auto'
   },
   vite: {
     plugins: [tailwindcss()]
