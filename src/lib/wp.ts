@@ -14,6 +14,22 @@ if (!WP_USER || !WP_APP_PASS) {
 const API        = 'https://androidscroll.com/wp-json/wp/v2';
 const authHeader = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
 
+// ─── Concurrency limiter ───────────────────────────────────────────────────────
+// Processes `items` with `fn` in batches of `limit` at a time.
+// Prevents hammering Hostinger with N simultaneous requests at build time.
+export async function withConcurrency<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  limit = 15
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += limit) {
+    const batch = items.slice(i, i + limit);
+    results.push(...await Promise.all(batch.map(fn)));
+  }
+  return results;
+}
+
 // ─── RankMath head validator ───────────────────────────────────────────────────
 // Allowlist approach: only extracts the specific tag types we trust.
 // Anything else (style, link[rel=stylesheet], arbitrary script, etc.) is silently dropped.
@@ -68,75 +84,95 @@ const wpFetch = async (url: string): Promise<any> => {
 };
 
 // ─── API functions ────────────────────────────────────────────────────────────
-export const getPosts           = (n: number) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`));
+export const getPosts = (n: number) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`));
 
-// Paginated — fetches every published post regardless of count. Use this everywhere
-// you need the full post list. getPosts(n) stays for intentional display limits (e.g. 12, 50).
+// Paginated — fetches every published post regardless of count.
+// FIX: parallelises pages 2..N after learning X-WP-TotalPages from page 1,
+// instead of the previous sequential while-loop (O(pages) round trips → 1 + parallel).
 export const getAllPosts = () => cached('all-posts', async () => {
-  const all: any[] = [];
-  let page = 1;
-  while (true) {
-    const res = await fetch(`${API}/posts?per_page=100&page=${page}&_embed&status=publish`, { headers: { Authorization: authHeader } });
-    if (!res.ok) break;
-    const batch: any[] = await res.json();
-    if (!batch.length) break;
-    all.push(...batch);
-    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
-    if (page >= totalPages) break;
-    page++;
-  }
-  return all;
-});
-export const getPost            = (s: string) => wpFetch(`${API}/posts?slug=${encodeURIComponent(s)}&_embed`).then((a: any[]) => a[0]);
-export const getCategories = () => cached('category', async () => {
-  const all: any[] = [];
-  let page = 1;
-  while (true) {
-    const res = await fetch(`${API}/categories?per_page=100&page=${page}&hide_empty=true`, { headers: { Authorization: authHeader } });
-    if (!res.ok) break;
-    const batch: any[] = await res.json();
-    if (!batch.length) break;
-    all.push(...batch);
-    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
-    if (page >= totalPages) break;
-    page++;
-  }
-  return all;
-});
-export const getPostsByCategory = (id: number) => cached(`posts-by-cat-${id}`, async () => {
-  const all: any[] = [];
-  let page = 1;
-  while (true) {
-    const res = await fetch(`${API}/posts?categories=${id}&per_page=100&page=${page}&_embed`, { headers: { Authorization: authHeader } });
-    if (!res.ok) break;
-    const batch: any[] = await res.json();
-    if (!batch.length) break;
-    all.push(...batch);
-    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
-    if (page >= totalPages) break;
-    page++;
-  }
-  return all;
-});
-export const getCategoryBySlug  = (slug: string) => wpFetch(`${API}/categories?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
-export const getPages = () => cached('pages', async () => {
-  const all: any[] = [];
-  let page = 1;
-  while (true) {
-    const res = await fetch(`${API}/pages?per_page=100&page=${page}`, { headers: { Authorization: authHeader } });
-    if (!res.ok) break;
-    const batch: any[] = await res.json();
-    if (!batch.length) break;
-    all.push(...batch);
-    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
-    if (page >= totalPages) break;
-    page++;
-  }
-  return all;
-});
-export const getPage            = (slug: string) => wpFetch(`${API}/pages?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
+  const res1 = await fetch(
+    `${API}/posts?per_page=100&page=1&_embed&status=publish`,
+    { headers: { Authorization: authHeader } }
+  );
+  if (!res1.ok) return [];
+  const first: any[] = await res1.json();
+  const totalPages = Number(res1.headers.get('X-WP-TotalPages') ?? 1);
+  if (totalPages <= 1) return first;
 
-// Authenticated comments fetch — used in getStaticPaths batch, no cache needed (called once per post)
+  // Fetch remaining pages in parallel — safe because WP pagination is stable during a build
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) =>
+      fetch(
+        `${API}/posts?per_page=100&page=${i + 2}&_embed&status=publish`,
+        { headers: { Authorization: authHeader } }
+      ).then(r => r.ok ? r.json() as Promise<any[]> : Promise.resolve([]))
+    )
+  );
+  return [...first, ...rest.flat()];
+});
+
+export const getPost = (s: string) => wpFetch(`${API}/posts?slug=${encodeURIComponent(s)}&_embed`).then((a: any[]) => a[0]);
+
+// FIX: parallelised pagination, same pattern as getAllPosts
+export const getCategories = () => cached('category', async () => {
+  const res1 = await fetch(
+    `${API}/categories?per_page=100&page=1&hide_empty=true`,
+    { headers: { Authorization: authHeader } }
+  );
+  if (!res1.ok) return [];
+  const first: any[] = await res1.json();
+  const totalPages = Number(res1.headers.get('X-WP-TotalPages') ?? 1);
+  if (totalPages <= 1) return first;
+
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) =>
+      fetch(
+        `${API}/categories?per_page=100&page=${i + 2}&hide_empty=true`,
+        { headers: { Authorization: authHeader } }
+      ).then(r => r.ok ? r.json() as Promise<any[]> : Promise.resolve([]))
+    )
+  );
+  return [...first, ...rest.flat()];
+});
+
+// FIX: filters from the already-cached getAllPosts() result instead of making
+// separate paginated API calls per category. Zero extra network requests after
+// getAllPosts() has run once.
+export const getPostsByCategory = (id: number) =>
+  cached(`posts-by-cat-${id}`, async () => {
+    const all = await getAllPosts();
+    return all.filter((p: any) =>
+      p._embedded?.['wp:term']?.[0]?.some((t: any) => t.id === id)
+    );
+  });
+
+export const getCategoryBySlug = (slug: string) => wpFetch(`${API}/categories?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
+
+// FIX: parallelised pagination, same pattern as getAllPosts
+export const getPages = () => cached('pages', async () => {
+  const res1 = await fetch(
+    `${API}/pages?per_page=100&page=1`,
+    { headers: { Authorization: authHeader } }
+  );
+  if (!res1.ok) return [];
+  const first: any[] = await res1.json();
+  const totalPages = Number(res1.headers.get('X-WP-TotalPages') ?? 1);
+  if (totalPages <= 1) return first;
+
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) =>
+      fetch(
+        `${API}/pages?per_page=100&page=${i + 2}`,
+        { headers: { Authorization: authHeader } }
+      ).then(r => r.ok ? r.json() as Promise<any[]> : Promise.resolve([]))
+    )
+  );
+  return [...first, ...rest.flat()];
+});
+
+export const getPage = (slug: string) => wpFetch(`${API}/pages?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
+
+// Authenticated comments fetch — used in getStaticPaths batch via withConcurrency
 export const getComments = (postId: number): Promise<any[]> =>
   fetch(`${API}/comments?post=${postId}&per_page=100&orderby=date&order=asc`, { headers: { Authorization: authHeader } })
     .then(r => r.ok ? r.json() : [])
@@ -147,15 +183,20 @@ export const getPostSeo = async (slug: string) => {
   return res[0] ?? null;
 };
 
-// FIX: slug URL-encoded; response validated before use
+// FIX: now wrapped in cached() — previously made a fresh network request on every
+// call. With N posts in getStaticPaths each slug is unique so caching won't collapse
+// duplicates, but it prevents any second call for the same slug (e.g. from [page].astro)
+// from hitting the network again.
 export const getRankMathHead = (slug: string): Promise<string | null> =>
-  fetch(`https://androidscroll.com/wp-json/rankmath/v1/getHead?url=https://androidscroll.com/${encodeURIComponent(slug)}/`)
-    .then(r => r.json())
-    .then(d => validateRankMathHead(d.success ? d.head : null))
-    .catch(() => null);
+  cached(`rankmath-${slug}`, () =>
+    fetch(`https://androidscroll.com/wp-json/rankmath/v1/getHead?url=https://androidscroll.com/${encodeURIComponent(slug)}/`)
+      .then(r => r.json())
+      .then(d => validateRankMathHead(d.success ? d.head : null))
+      .catch(() => null)
+  );
 
 // ─── HTML decode ──────────────────────────────────────────────────────────────
-// FIX: Single-pass only — double-pass was an XSS amplifier
+// Single-pass only — double-pass was an XSS amplifier
 const _decode = (str: string): string =>
   str
     .replace(/&#(\d+);/g,          (_, n) => String.fromCharCode(Number(n)))

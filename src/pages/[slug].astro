@@ -1,18 +1,20 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getAllPosts, getPosts, getCategories, getRankMathHead, getComments, decode} from '../lib/wp';
+import { getAllPosts, getPosts, getCategories, getRankMathHead, getComments, withConcurrency, decode} from '../lib/wp';
 import Comments from '../components/Comments.astro';
 import { createHash } from 'crypto';
 import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
   const posts = await getAllPosts();
-  // Batch all per-post fetches in parallel — avoids N sequential requests at build time
+  // FIX: withConcurrency(15) replaces Promise.all(posts.map(...)) — previously fired
+  // N simultaneous requests to Hostinger which causes timeouts at scale (200+ posts).
+  // 15 concurrent requests at a time is safe and still fast.
   const [heads, commentsArr] = await Promise.all([
-    Promise.all(posts.map(p => getRankMathHead(p.slug))),
-    Promise.all(posts.map(p => getComments(p.id))),
+    withConcurrency(posts, (p: any) => getRankMathHead(p.slug)),
+    withConcurrency(posts, (p: any) => getComments(p.id)),
   ]);
-  return posts.map((p, i) => ({
+  return posts.map((p: any, i: number) => ({
     params: { slug: p.slug },
     props: { post: p, rankMathHead: heads[i], buildComments: commentsArr[i] },
   }));

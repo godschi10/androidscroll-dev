@@ -1,37 +1,7 @@
 import type { APIRoute } from 'astro';
-import { getCategories, getPages } from '../lib/wp';
+import { getAllPosts, getCategories, getPages } from '../lib/wp';
 
-const SITE      = 'https://androidscroll.com';
-const WP_API    = 'https://androidscroll.com/wp-json/wp/v2';
-const AUTH      = 'Basic ' + btoa(`${import.meta.env.WP_USER}:${import.meta.env.WP_APP_PASS}`);
-
-// ─── Paginated post fetch — no hardcoded cap ───────────────────────────────────
-// Calls WP REST API in batches of 100 until all published posts are collected.
-// X-WP-TotalPages tells us how many pages exist so we stop exactly on time.
-async function getAllPosts(): Promise<{ slug: string; modified: string }[]> {
-  const all: { slug: string; modified: string }[] = [];
-  let page = 1;
-
-  while (true) {
-    const res = await fetch(
-      `${WP_API}/posts?per_page=100&page=${page}&_fields=slug,modified&status=publish`,
-      { headers: { Authorization: AUTH } },
-    );
-
-    if (!res.ok) break;
-
-    const batch: { slug: string; modified: string }[] = await res.json();
-    if (!batch.length) break;
-
-    all.push(...batch);
-
-    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? 1);
-    if (page >= totalPages) break;
-    page++;
-  }
-
-  return all;
-}
+const SITE = 'https://androidscroll.com';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function buildCategoryPath(cat: any, allCats: any[]): string {
@@ -46,6 +16,9 @@ function urlEntry(loc: string, lastmod?: string | null): string {
 }
 
 // ─── Route ────────────────────────────────────────────────────────────────────
+// FIX: getAllPosts() now comes from wp.ts so it shares the build-time cache with
+// [slug].astro — previously this file had its own duplicate function that caused
+// a second full paginated fetch on every build.
 export const GET: APIRoute = async () => {
   const [posts, categories, pages] = await Promise.all([
     getAllPosts(),
@@ -65,8 +38,8 @@ export const GET: APIRoute = async () => {
     .filter((p: any) => p.status === 'publish' && p.slug !== 'home' && !DISALLOWED_SLUGS.has(p.slug))
     .map((p: any) => urlEntry(`${SITE}/${p.slug}/`, p.modified?.split('T')[0]));
 
-  // All posts — no cap, paginated above
-  const postEntries = posts.map((p) =>
+  // All posts — no cap, comes from shared cached getAllPosts()
+  const postEntries = (posts as any[]).map((p: any) =>
     urlEntry(`${SITE}/${p.slug}/`, p.modified?.split('T')[0] ?? null),
   );
 
