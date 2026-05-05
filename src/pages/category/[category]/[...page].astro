@@ -31,6 +31,22 @@ export async function getStaticPaths({ paginate }: { paginate: Function }) {
 
 const { cat, page } = Astro.props;
 const posts = page.data;
+
+const cur = page.currentPage;
+const last = page.lastPage;
+const base = page.url.current.replace(/\/\d+\/$/, '/');
+const getUrl = (n: number) => n === 1 ? base : `${base}${n}/`;
+
+const pageNums: (number | '...')[] = [];
+if (last <= 7) {
+  for (let i = 1; i <= last; i++) pageNums.push(i);
+} else {
+  pageNums.push(1);
+  if (cur > 3) pageNums.push('...');
+  for (let i = Math.max(2, cur - 1); i <= Math.min(last - 1, cur + 1); i++) pageNums.push(i);
+  if (cur < last - 2) pageNums.push('...');
+  pageNums.push(last);
+}
 ---
 
 <Layout
@@ -70,10 +86,32 @@ const posts = page.data;
   .category_meta-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; border:1.5px solid var(--brand-primary,#00a896); color:var(--brand-primary,#00a896); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; text-decoration:none; }
   a.category_meta-pill:hover { background:var(--brand-primary,#00a896); color:#fff; }
 
-  .as-pagination { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:48px; }
-  .as-pagination a { display:inline-flex; align-items:center; gap:6px; padding:8px 18px; border-radius:8px; border:1.5px solid var(--brand-primary,#00a896); color:var(--brand-primary,#00a896); font-size:13px; font-weight:600; text-decoration:none; transition:background 0.2s, color 0.2s; }
-  .as-pagination a:hover { background:var(--brand-primary,#00a896); color:#fff; }
-  .as-pagination span { font-size:13px; color:var(--text-muted); }
+  .as-pagination { display:flex; align-items:center; justify-content:center; gap:4px; margin-top:48px; flex-wrap:wrap; }
+  .as-pg-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:36px; height:36px; padding:0 10px;
+    border-radius:8px; font-size:13px; font-weight:600;
+    text-decoration:none; color:var(--text-muted);
+    border:1.5px solid transparent; background:transparent;
+    transition:border-color 0.15s, color 0.15s, background 0.15s;
+    line-height:1;
+  }
+  .as-pg-btn:hover:not(.as-pg-current):not(.as-pg-disabled) {
+    border-color:var(--brand-primary,#00a896);
+    color:var(--brand-primary,#00a896);
+  }
+  .as-pg-current {
+    background:var(--brand-primary,#00a896);
+    border-color:var(--brand-primary,#00a896);
+    color:#fff;
+  }
+  .as-pg-nav { color:var(--text-muted); }
+  .as-pg-disabled { opacity:0.3; cursor:not-allowed; pointer-events:none; }
+  .as-pg-ellipsis {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:36px; font-size:13px;
+    color:var(--text-muted); letter-spacing:2px;
+  }
 </style>
 
   {posts.length === 0 && <p class="text-neutral-500">No posts yet.</p>}
@@ -99,10 +137,34 @@ const posts = page.data;
     })}
   </div>
 
-  <nav class="as-pagination" aria-label="Pagination">
-    {page.url.prev && <a href={page.url.prev}>← Previous</a>}
-    <span>Page {page.currentPage} of {page.lastPage}</span>
-    {page.url.next && <a href={page.url.next}>Next →</a>}
-  </nav>
+  {last > 1 && (
+    <nav class="as-pagination" aria-label="Pagination">
+      {page.url.prev
+        ? <a href={page.url.prev} class="as-pg-btn as-pg-nav" aria-label="Previous page">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        : <span class="as-pg-btn as-pg-nav as-pg-disabled" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+      }
+
+      {pageNums.map((p) =>
+        p === '...'
+          ? <span class="as-pg-ellipsis" aria-hidden="true">…</span>
+          : p === cur
+            ? <span class="as-pg-btn as-pg-current" aria-current="page">{p}</span>
+            : <a href={getUrl(p as number)} class="as-pg-btn">{p}</a>
+      )}
+
+      {page.url.next
+        ? <a href={page.url.next} class="as-pg-btn as-pg-nav" aria-label="Next page">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        : <span class="as-pg-btn as-pg-nav as-pg-disabled" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+      }
+    </nav>
+  )}
 
 </Layout>
