@@ -28,26 +28,29 @@ export async function getStaticPaths() {
 const { child, parent } = Astro.props;
 const posts = await getPostsByCategory(child.id);
 
-// Pre-calculate slugs to avoid syntax errors in the template
+// --- PRE-CALCULATED LOGIC (Prevents Syntax Errors) ---
 const parentSlug = parent ? parent.slug : 'uncategorized';
 const parentName = parent ? decode(parent.name) : '';
+const childName = decode(child.name);
+const subcategoryUrl = `https://androidscroll.com/category/${parentSlug}/${child.slug}`;
+const parentUrl = `https://androidscroll.com/category/${parentSlug}`;
 ---
 
 <Layout 
-  title={decode(child.name)}
+  title={childName}
   pageSchema={{
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": decode(child.name),
-    "url": `https://androidscroll.com/category/${parentSlug}/${child.slug}`,
-    "description": `Browse all ${decode(child.name)} articles on AndroidScroll`,
+    "name": childName,
+    "url": subcategoryUrl,
+    "description": `Browse all ${childName} articles on AndroidScroll`,
     "breadcrumb": {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://androidscroll.com" },
         { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://androidscroll.com/category" },
-        { "@type": "ListItem", "position": 3, "name": parentName, "item": `https://androidscroll.com/category/${parentSlug}` },
-        { "@type": "ListItem", "position": 4, "name": decode(child.name), "item": `https://androidscroll.com/category/${parentSlug}/${child.slug}` }
+        { "@type": "ListItem", "position": 3, "name": parentName, "item": parentUrl },
+        { "@type": "ListItem", "position": 4, "name": childName, "item": subcategoryUrl }
       ]
     }
   }}
@@ -55,12 +58,12 @@ const parentName = parent ? decode(parent.name) : '';
   <nav class="as-breadcrumbs" aria-label="Breadcrumb">
     <a href="/" class="as-bc-home">Home</a>
     <span class="as-bc-sep" aria-hidden="true">›</span>
-    {parent && <a href={`/category/${parent.slug}`} class="as-bc-parent">{decode(parent.name)}</a>}
+    {parent && <a href={parentUrl} class="as-bc-parent">{parentName}</a>}
     {parent && <span class="as-bc-sep" aria-hidden="true">›</span>}
-    <span class="category_meta-pill">{decode(child.name)}</span>
+    <span class="category_meta-pill">{childName}</span>
   </nav>
 
-  <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">{decode(child.name)}</h1>
+  <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">{childName}</h1>
 
   <style>
     .as-breadcrumbs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.4; }
