@@ -102,7 +102,8 @@ export const getAllPosts = () => cached('all-posts', async () => {
     { headers: { Authorization: authHeader } }
   );
   if (!res1.ok) return [];
-  const first: any[] = await res1.json();
+  let first: any[];
+  try { first = await res1.json(); } catch { return []; }
   const totalPages = Number(res1.headers.get('X-WP-TotalPages') ?? 1);
   if (totalPages <= 1) return first;
 
@@ -113,6 +114,7 @@ export const getAllPosts = () => cached('all-posts', async () => {
         `${API}/posts?per_page=100&page=${i + 2}&_embed&status=publish`,
         { headers: { Authorization: authHeader } }
       ).then(r => r.ok ? r.json() as Promise<any[]> : Promise.resolve([]))
+        .catch(() => [] as any[])
     )
   );
   return [...first, ...rest.flat()];
@@ -142,19 +144,32 @@ export const getCategories = () => cached('category', async () => {
   return [...first, ...rest.flat()];
 });
 
-// FIX: filters from the already-cached getAllPosts() result instead of making
-// separate paginated API calls per category. Zero extra network requests after
-// getAllPosts() has run once.
+// Fetches posts for a category directly from WP API with pagination.
+// Does NOT rely on getAllPosts() cache — that cache is per-process and does not
+// persist across Astro's isolated getStaticPaths workers, causing rate-limit
+// floods and silent failures when many category pages build simultaneously.
 export const getPostsByCategory = (id: number) =>
   cached(`posts-by-cat-${id}`, async () => {
-    const all = await getAllPosts();
-    return all.filter((p: any) => {
-      const terms = p._embedded?.['wp:term'];
-      if (!Array.isArray(terms)) return false;
-      const cats = terms[0];
-      if (!Array.isArray(cats)) return false;
-      return cats.some((t: any) => t.id === id);
-    });
+    const res1 = await fetch(
+      `${API}/posts?per_page=100&page=1&_embed&status=publish&categories=${id}`,
+      { headers: { Authorization: authHeader } }
+    );
+    if (!res1.ok) return [];
+    let first: any[];
+    try { first = await res1.json(); } catch { return []; }
+    const totalPages = Number(res1.headers.get('X-WP-TotalPages') ?? 1);
+    if (totalPages <= 1) return first;
+
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        fetch(
+          `${API}/posts?per_page=100&page=${i + 2}&_embed&status=publish&categories=${id}`,
+          { headers: { Authorization: authHeader } }
+        ).then(r => r.ok ? r.json() as Promise<any[]> : Promise.resolve([]))
+          .catch(() => [] as any[])
+      )
+    );
+    return [...first, ...rest.flat()];
   });
 
 export const getCategoryBySlug = (slug: string) => wpFetch(`${API}/categories?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
