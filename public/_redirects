@@ -1,2 +1,2 @@
-/sitemap-index.xml  /404.html  404
-/sitemap-0.xml      /404.html  404
+/sitemap-index.xml  /sitemap.xml  301
+/sitemap-0.xml      /sitemap.xml  301
