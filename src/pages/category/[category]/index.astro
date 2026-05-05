@@ -8,21 +8,33 @@ function wpExcerpt(p: any, words = 60): string {
     .split(' ').slice(0, words).join(' ') + '…';
 }
 
-export async function getStaticPaths() {
+export async function getStaticPaths({ paginate }: { paginate: Function }) {
   const cats = await getCategories();
   const parents = cats.filter((c: any) => c.parent === 0);
-  return parents.map((cat: any) => ({
-    params: { category: cat.slug },
-    props: { cat },
-  }));
+
+  const allPaths: any[] = [];
+
+  for (const cat of parents) {
+    const posts = await getPostsByCategory(cat.id);
+
+    const pages = paginate(posts, {
+      params: { category: cat.slug },
+      props: { cat },
+      pageSize: 12,
+    });
+
+    allPaths.push(...pages);
+  }
+
+  return allPaths;
 }
 
-const { cat } = Astro.props;
-const posts = await getPostsByCategory(cat.id);
+const { cat, page } = Astro.props;
+const posts = page.data;
 ---
 
-<Layout 
-  title={decode(cat.name)}
+<Layout
+  title={page.currentPage === 1 ? decode(cat.name) : `${decode(cat.name)} – Page ${page.currentPage}`}
   pageSchema={{
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -44,7 +56,11 @@ const posts = await getPostsByCategory(cat.id);
     <span class="as-bc-sep" aria-hidden="true">›</span>
     <span class="category_meta-pill">{decode(cat.name)}</span>
   </nav>
-  <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">{decode(cat.name)}</h1>
+
+  <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">
+    {decode(cat.name)}
+    {page.currentPage > 1 && <span class="text-lg font-normal text-neutral-400 ml-2">– Page {page.currentPage}</span>}
+  </h1>
 
 <style>
   .as-breadcrumbs { display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.4; }
@@ -53,8 +69,15 @@ const posts = await getPostsByCategory(cat.id);
   .as-bc-sep { opacity:0.45; font-size:11px; }
   .category_meta-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; border:1.5px solid var(--brand-primary,#00a896); color:var(--brand-primary,#00a896); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; text-decoration:none; }
   a.category_meta-pill:hover { background:var(--brand-primary,#00a896); color:#fff; }
+
+  .as-pagination { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:48px; }
+  .as-pagination a { display:inline-flex; align-items:center; gap:6px; padding:8px 18px; border-radius:8px; border:1.5px solid var(--brand-primary,#00a896); color:var(--brand-primary,#00a896); font-size:13px; font-weight:600; text-decoration:none; transition:background 0.2s, color 0.2s; }
+  .as-pagination a:hover { background:var(--brand-primary,#00a896); color:#fff; }
+  .as-pagination span { font-size:13px; color:var(--text-muted); }
 </style>
+
   {posts.length === 0 && <p class="text-neutral-500">No posts yet.</p>}
+
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {posts.map((post: any) => {
       const img = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
@@ -75,4 +98,11 @@ const posts = await getPostsByCategory(cat.id);
       );
     })}
   </div>
+
+  <nav class="as-pagination" aria-label="Pagination">
+    {page.url.prev && <a href={page.url.prev}>← Previous</a>}
+    <span>Page {page.currentPage} of {page.lastPage}</span>
+    {page.url.next && <a href={page.url.next}>Next →</a>}
+  </nav>
+
 </Layout>
