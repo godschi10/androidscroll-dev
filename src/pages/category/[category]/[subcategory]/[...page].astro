@@ -1,6 +1,6 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
-import { getCategories, getPostsByCategory, decode } from '../../../lib/wp';
+import Layout from '../../../../layouts/Layout.astro';
+import { getCategories, getPostsByCategory, decode } from '../../../../lib/wp';
 
 function wpExcerpt(p: any, words = 60): string {
   const raw = p.excerpt?.rendered || p.content?.rendered || '';
