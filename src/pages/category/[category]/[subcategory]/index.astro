@@ -80,7 +80,7 @@ const parentUrl = `https://androidscroll.com/category/${parentSlug}`;
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {posts.map((post: any) => {
-      const img = post._embedded?.['wp:featuredmedia']?.source_url;
+      const img = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
       const title = decode(post.title.rendered.replace(/<[^>]+>/g, ''));
       const desc = wpExcerpt(post, 60);
       return (
