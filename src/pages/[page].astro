@@ -21,7 +21,7 @@ const safeContent = serverSanitizeHtml(page.content.rendered);
 
 <Layout title={title} description={description} rankMathHead={rankMathHead}>
   <article style="max-width:780px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
-    <h1 style="margin-bottom:1em;" set:html={page.title.rendered.replace(/<[^>]+>/g, '')}></h1>
+    <h1 style="margin-bottom:1em;">{title}</h1>
     <div class="post-content" set:html={safeContent}></div>
   </article>
   {page.slug === 'privacy-policy' && (

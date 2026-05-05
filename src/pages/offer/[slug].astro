@@ -61,10 +61,8 @@ const { destination } = Astro.props;
     <meta http-equiv="refresh" content={`0;url=${destination}`} />
     <title>Redirecting...</title>
   </head>
-  <body>
+  <body data-redirect={destination}>
     <p>Redirecting... <a href={destination} rel="noopener noreferrer">Click here if nothing happens.</a></p>
-    <script define:vars={{ destination }}>
-      window.location.replace(destination);
-    </script>
+    <script src="/js/offer-redirect.js" defer></script>
   </body>
 </html>

@@ -11,6 +11,13 @@ if (!WP_USER || !WP_APP_PASS) {
   );
 }
 
+if (!import.meta.env.AUTHOR_EMAIL) {
+  console.warn(
+    '[wp.ts] AUTHOR_EMAIL is not set — author Gravatar will fall back to the ' +
+    'default Gravatar image (hash of empty string). Add AUTHOR_EMAIL to .env / CF Pages.'
+  );
+}
+
 const API        = 'https://androidscroll.com/wp-json/wp/v2';
 const authHeader = 'Basic ' + btoa(`${WP_USER}:${WP_APP_PASS}`);
 
@@ -84,7 +91,7 @@ const wpFetch = async (url: string): Promise<any> => {
 };
 
 // ─── API functions ────────────────────────────────────────────────────────────
-export const getPosts = (n: number) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed`));
+export const getPosts = (n: number) => cached(`posts-${n}`, () => wpFetch(`${API}/posts?per_page=${n}&_embed&status=publish`));
 
 // Paginated — fetches every published post regardless of count.
 // FIX: parallelises pages 2..N after learning X-WP-TotalPages from page 1,

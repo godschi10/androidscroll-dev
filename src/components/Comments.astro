@@ -99,11 +99,21 @@ function safeUrl(url: string): string {
 
 // Strips Jetpack's i0.wp.com proxy wrapper so avatar requests go direct
 // to Gravatar instead of counting against Worker usage.
+// After unwrapping, the host is validated — only *.gravatar.com is allowed.
 // Default avatar style is managed in WP: Settings → Discussion → Default Avatar.
 function gravatarDirect(url: string): string {
   if (!url) return safeUrl(url);
   const jetpack = url.match(/^https?:\/\/i\d+\.wp\.com\/(.+)$/);
-  if (jetpack) return safeUrl(`https://${jetpack[1]}`);
+  if (jetpack) {
+    const unwrapped = `https://${jetpack[1]}`;
+    try {
+      const u = new URL(unwrapped);
+      if (u.hostname === 'gravatar.com' || u.hostname.endsWith('.gravatar.com')) {
+        return safeUrl(unwrapped);
+      }
+    } catch {}
+    return ''; // Non-Gravatar Jetpack URL — discard
+  }
   return safeUrl(url);
 }
 
