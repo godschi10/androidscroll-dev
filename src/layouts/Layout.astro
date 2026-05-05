@@ -91,7 +91,8 @@ function fixRankMathJsonLd(html: string): string {
   function fixUrl(url: string): string {
     return url
       .replace(/pintrest\.com/gi, 'pinterest.com')
-      .replace(/^https?:\/\/twitter\.com\/x\.com\//i, 'https://x.com/');
+      .replace(/^https?:\/\/twitter\.com\/x\.com\//i, 'https://x.com/')
+      .replace(/^http:\/\//i, 'https://');
   }
 
   function fixSameAs(node: any): void {
