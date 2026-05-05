@@ -27,6 +27,10 @@ export async function getStaticPaths() {
 
 const { child, parent } = Astro.props;
 const posts = await getPostsByCategory(child.id);
+
+// Pre-calculate slugs to avoid syntax errors in the template
+const parentSlug = parent ? parent.slug : 'uncategorized';
+const parentName = parent ? decode(parent.name) : '';
 ---
 
 <Layout 
@@ -35,15 +39,15 @@ const posts = await getPostsByCategory(child.id);
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": decode(child.name),
-    "url": `https://androidscroll.com/category/${parent?.slug ?? 'uncategorized'}/${child.slug}`,
+    "url": `https://androidscroll.com/category/${parentSlug}/${child.slug}`,
     "description": `Browse all ${decode(child.name)} articles on AndroidScroll`,
     "breadcrumb": {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://androidscroll.com" },
         { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://androidscroll.com/category" },
-        { "@type": "ListItem", "position": 3, "name": decode(parent?.name ?? ''), "item": `https://androidscroll.com/category/${parent?.slug ?? ''}` },
-        { "@type": "ListItem", "position": 4, "name": decode(child.name), "item": `https://androidscroll.com/category/${parent?.slug ?? 'uncategorized'}/${child.slug}` }
+        { "@type": "ListItem", "position": 3, "name": parentName, "item": `https://androidscroll.com/category/${parentSlug}` },
+        { "@type": "ListItem", "position": 4, "name": decode(child.name), "item": `https://androidscroll.com/category/${parentSlug}/${child.slug}` }
       ]
     }
   }}
