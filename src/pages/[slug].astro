@@ -98,21 +98,13 @@ const safeAuthorUrl = (url: string | undefined): string => {
 
 // Comments come from props (batched in getStaticPaths)
 
+// FIX: Replaced DiscussionForumPosting (a forum-specific type with no rich-result
+// benefit on blogs) with standalone Comment nodes linked to the post via parentItem.
+// This matches Schema.org's recommended pattern for article comments and avoids
+// Google treating the duplicate headline/author as a second competing BlogPosting.
 const commentSchema = buildComments.length > 0 ? jsonLdStringify({
   "@context": "https://schema.org",
-  "@type": "DiscussionForumPosting",
-  "@id": `https://androidscroll.com/${post.slug}/#comments`,
-  "url": `https://androidscroll.com/${post.slug}/`,
-  "headline": decode(post.title.rendered.replace(/<[^>]+>/g,'')),
-  "name": decode(post.title.rendered.replace(/<[^>]+>/g,'')),
-  "text": decode(post.excerpt.rendered.replace(/<[^>]+>/g,'').trim()),
-  "datePublished": post.date.endsWith('Z') || post.date.includes('+') ? post.date : post.date + '+00:00',
-  "author": {
-    "@type": "Person",
-    "name": "G-will Chijioke",
-    "url": "https://androidscroll.com/about-androidscroll"
-  },
-  "comment": buildComments.map((c: any) => ({
+  "@graph": buildComments.map((c: any) => ({
     "@type": "Comment",
     "dateCreated": c.date.endsWith('Z') || c.date.includes('+') ? c.date : c.date + '+00:00',
     "text": c.content.rendered.replace(/<[^>]+>/g, '').trim(),
@@ -120,7 +112,8 @@ const commentSchema = buildComments.length > 0 ? jsonLdStringify({
       "@type": "Person",
       "name": c.author_name,
       "url": safeAuthorUrl(c.author_url)
-    }
+    },
+    "parentItem": { "@id": `https://androidscroll.com/${post.slug}/#webpage` }
   }))
 }) : null;
 ---

@@ -68,7 +68,133 @@ function sanitizeRankMathHead(raw: string): string {
     .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
     .replace(/javascript\s*:/gi, '');
 }
-const safeRankMathHead = rankMathHead ? sanitizeRankMathHead(rankMathHead) : null;
+// Fix known Rank Math JSON-LD schema issues — double-encoded HTML entities in Gravatar
+// URLs, URL typos (pintrest.com), malformed sameAs (twitter.com/x.com), missing
+// mainEntityOfPage on BlogPosting, numeric strings on ImageObject/BreadcrumbList,
+// empty supply/tool arrays on HowTo, HTML entities in articleSection, and missing
+// Organization url.  Uses the same indexOf walk as sanitizeRankMathHead so
+// <\/script> escape sequences inside JSON strings never cause early termination.
+function fixRankMathJsonLd(html: string): string {
+  const CLOSE = '</script>';
+
+  function decodeHtmlEntities(obj: any): any {
+    if (typeof obj === 'string') return obj.replace(/&amp;amp;/g, '&').replace(/&amp;/g, '&');
+    if (Array.isArray(obj))       return obj.map(decodeHtmlEntities);
+    if (obj && typeof obj === 'object') {
+      const out: any = {};
+      for (const k of Object.keys(obj)) out[k] = decodeHtmlEntities(obj[k]);
+      return out;
+    }
+    return obj;
+  }
+
+  function fixUrl(url: string): string {
+    return url
+      .replace(/pintrest\.com/gi, 'pinterest.com')
+      .replace(/^https?:\/\/twitter\.com\/x\.com\//i, 'https://x.com/');
+  }
+
+  function fixSameAs(node: any): void {
+    if (Array.isArray(node.sameAs)) node.sameAs = node.sameAs.map(fixUrl);
+    const fixPerson = (p: any) => { if (Array.isArray(p.sameAs)) p.sameAs = p.sameAs.map(fixUrl); };
+    if (node.author) Array.isArray(node.author) ? node.author.forEach(fixPerson) : fixPerson(node.author);
+  }
+
+  function applyFixes(data: any): any {
+    // Decode all double/single-encoded HTML entities across the entire object tree
+    data = decodeHtmlEntities(data);
+    const nodes: any[] = data['@graph'];
+    if (!Array.isArray(nodes)) return data;
+
+    // Pre-locate the WebPage/@id for mainEntityOfPage linking
+    const webpageId: string | null = nodes
+      .find((n: any) => [n['@type']].flat().some((t: string) => ['WebPage', 'FAQPage'].includes(t)))
+      ?.['@id'] ?? null;
+
+    for (const node of nodes) {
+      const types: string[] = [node['@type']].flat().filter(Boolean);
+      fixSameAs(node);
+
+      // Organization — add url if absent
+      if (types.includes('Organization') && !node.url) {
+        node.url = 'https://androidscroll.com/';
+      }
+
+      // BlogPosting / Article
+      if (types.some((t: string) => ['BlogPosting', 'Article'].includes(t))) {
+        // Strip " - Androidscroll" suffix from headline
+        if (typeof node.headline === 'string') {
+          node.headline = node.headline.replace(/\s*[-–|]\s*Androidscroll\s*$/i, '').trim();
+        }
+        // Add mainEntityOfPage if absent
+        if (!node.mainEntityOfPage && webpageId) {
+          node.mainEntityOfPage = { '@id': webpageId };
+        }
+        // Decode any residual HTML entity in articleSection (e.g. &amp; → &)
+        if (typeof node.articleSection === 'string') {
+          node.articleSection = node.articleSection.replace(/&amp;/g, '&');
+        }
+      }
+
+      // HowTo — remove empty supply/tool arrays
+      if (types.includes('HowTo')) {
+        if (Array.isArray(node.supply) && node.supply.length === 0) delete node.supply;
+        if (Array.isArray(node.tool)   && node.tool.length   === 0) delete node.tool;
+      }
+
+      // ImageObject — coerce numeric strings to integers
+      if (types.includes('ImageObject')) {
+        for (const k of ['width', 'height'] as const) {
+          if (typeof node[k] === 'string' && /^\d+$/.test(node[k])) node[k] = +node[k];
+        }
+      }
+
+      // BreadcrumbList — coerce position strings to integers
+      if (types.includes('BreadcrumbList') && Array.isArray(node.itemListElement)) {
+        for (const item of node.itemListElement) {
+          if (typeof item.position === 'string' && /^\d+$/.test(item.position)) {
+            item.position = +item.position;
+          }
+        }
+      }
+    }
+    return data;
+  }
+
+  // Walk the sanitized HTML using indexOf — mirrors sanitizeRankMathHead's approach
+  let result = '';
+  let remaining = html;
+  while (remaining.length > 0) {
+    const scriptStart = remaining.search(/<script[\s>]/i);
+    if (scriptStart === -1) { result += remaining; break; }
+    result += remaining.slice(0, scriptStart);
+    remaining = remaining.slice(scriptStart);
+    const openEnd = remaining.indexOf('>');
+    if (openEnd === -1) { result += remaining; break; }
+    const openTag = remaining.slice(0, openEnd + 1);
+    const closeIdx = remaining.toLowerCase().indexOf(CLOSE, openEnd + 1);
+    if (closeIdx === -1) { result += remaining; break; }
+    const jsonContent = remaining.slice(openEnd + 1, closeIdx);
+    remaining = remaining.slice(closeIdx + CLOSE.length);
+
+    let fixedContent = jsonContent;
+    if (/type=["']application\/ld\+json["']/i.test(openTag)) {
+      try {
+        const fixed = applyFixes(JSON.parse(jsonContent));
+        fixedContent = JSON.stringify(fixed)
+          .replace(/</g, '\\u003c')
+          .replace(/>/g, '\\u003e')
+          .replace(/&/g, '\\u0026');
+      } catch { /* invalid JSON — leave block unchanged */ }
+    }
+    result += openTag + fixedContent + CLOSE;
+  }
+  return result;
+}
+
+const safeRankMathHead = rankMathHead
+  ? fixRankMathJsonLd(sanitizeRankMathHead(rankMathHead))
+  : null;
 
 const siteUrl = 'https://androidscroll.com';
 const siteName = 'AndroidScroll';
