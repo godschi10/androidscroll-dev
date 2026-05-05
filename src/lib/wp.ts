@@ -148,9 +148,13 @@ export const getCategories = () => cached('category', async () => {
 export const getPostsByCategory = (id: number) =>
   cached(`posts-by-cat-${id}`, async () => {
     const all = await getAllPosts();
-    return all.filter((p: any) =>
-      p._embedded?.['wp:term']?.[0]?.some((t: any) => t.id === id)
-    );
+    return all.filter((p: any) => {
+      const terms = p._embedded?.['wp:term'];
+      if (!Array.isArray(terms)) return false;
+      const cats = terms[0];
+      if (!Array.isArray(cats)) return false;
+      return cats.some((t: any) => t.id === id);
+    });
   });
 
 export const getCategoryBySlug = (slug: string) => wpFetch(`${API}/categories?slug=${encodeURIComponent(slug)}`).then((a: any[]) => a[0]);
