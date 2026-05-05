@@ -1,18 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getPages, getPage, getRankMathHead, decode } from '../lib/wp';
+import { getPages, getRankMathHead, decode } from '../lib/wp';
 import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
   const pages = await getPages();
-  return pages.map((p: any) => ({
+  const heads = await Promise.all(pages.map((p: any) => getRankMathHead(p.slug)));
+  return pages.map((p: any, i: number) => ({
     params: { page: p.slug },
+    props: { page: p, rankMathHead: heads[i] },
   }));
 }
 
-const page = await getPage(Astro.params.page);
+const { page, rankMathHead } = Astro.props;
 if (!page) return Astro.redirect('/404');
-const rankMathHead = await getRankMathHead(page.slug);
 
 const title = decode(page.title.rendered.replace(/<[^>]+>/g, ''));
 const description = decode(page.excerpt?.rendered?.replace(/<[^>]+>/g, '').trim() ?? '');

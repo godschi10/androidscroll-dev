@@ -7,6 +7,9 @@ import { serverSanitizeHtml } from '../lib/server-sanitize';
 
 export async function getStaticPaths() {
   const posts = await getAllPosts();
+  // Pre-warm caches for getCategories() and getPosts(50) so that the first post
+  // rendered doesn't pay cold network round-trips.
+  await Promise.all([getCategories(), getPosts(50)]);
   // FIX: withConcurrency(15) replaces Promise.all(posts.map(...)) — previously fired
   // N simultaneous requests to Hostinger which causes timeouts at scale (200+ posts).
   // 15 concurrent requests at a time is safe and still fast.
@@ -272,7 +275,7 @@ const commentSchema = buildComments.length > 0 ? jsonLdStringify({
 
     {related.length > 0 && (
       <div class="related-posts-section"><h3>Related Posts</h3><div class="related-grid">
-        {related.map(r => (<div class="related-card"><a href={`/${r.slug}/`} data-astro-prefetch><div class="related-thumb">{r._embedded?.['wp:featuredmedia']?.[0] && <img src={r._embedded['wp:featuredmedia'][0].source_url} alt={r.title.rendered.replace(/<[^>]+>/g,'')} loading="lazy" />}</div><p class="related-title">{r.title.rendered.replace(/<[^>]+>/g, '')}</p></a></div>))}
+        {related.map(r => (<div class="related-card"><a href={`/${r.slug}/`} data-astro-prefetch><div class="related-thumb">{r._embedded?.['wp:featuredmedia']?.[0] && <img src={r._embedded['wp:featuredmedia'][0].source_url} alt={decode(r.title.rendered.replace(/<[^>]+>/g,''))} loading="lazy" />}</div><p class="related-title">{decode(r.title.rendered.replace(/<[^>]+>/g, ''))}</p></a></div>))}
       </div></div>
     )}
 

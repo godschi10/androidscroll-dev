@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getPosts, getCategories, decode, excerpt } from '../lib/wp';
+import { getAllPosts, getCategories, decode, excerpt } from '../lib/wp';
 import { createHash } from 'crypto';
 
 const AUTHOR_EMAIL = import.meta.env.AUTHOR_EMAIL ?? '';
@@ -11,29 +11,6 @@ const authorAvatar = `https://www.gravatar.com/avatar/${gravatarHash}?s=64`;
 const FEATURED_POST_ID  = 12251;              // Paste your WP post ID here
 const POPULAR_POST_IDS  = [208,56,9838]; // Up to ~5 IDs, shown in this order
 // ──────────────────────────────────────────────────────────────────
-
-const WP_API = 'https://androidscroll.com/wp-json/wp/v2';
-
-// Fetch a single post by ID
-async function getPostById(id: number) {
-  try {
-    const res = await fetch(`${WP_API}/posts/${id}?_embed`);
-    return res.ok ? res.json() : null;
-  } catch { return null; }
-}
-
-// Fetch multiple posts by IDs in one request, returned in your defined order
-async function getPostsByIds(ids: number[]) {
-  if (!ids.length) return [];
-  try {
-    const res = await fetch(`${WP_API}/posts?include=${ids.join(',')}&_embed&per_page=${ids.length}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    // Re-sort to match the order you defined in POPULAR_POST_IDS
-    const map = new Map(data.map((p: any) => [p.id, p]));
-    return ids.map(id => map.get(id)).filter(Boolean);
-  } catch { return []; }
-}
 
 // Normalise any WP post object into a clean shape
 function mapPost(p: any) {
@@ -51,16 +28,21 @@ function mapPost(p: any) {
   };
 }
 
-// Fire all network requests in parallel
-const [wpPosts, allCats, featuredRaw, popularRaw] = await Promise.all([
-  getPosts(12),
+// getAllPosts() is already cached from getStaticPaths() in [slug].astro —
+// looking up featured/popular from it costs nothing extra.
+const [allCats, allPostsForLookup] = await Promise.all([
   getCategories(),
-  getPostById(FEATURED_POST_ID),
-  getPostsByIds(POPULAR_POST_IDS),
+  getAllPosts(),
 ]);
 
+// Derive featured + popular from the cached post list — zero extra network calls
+const allById = new Map(allPostsForLookup.map((p: any) => [p.id, p]));
+const featuredRaw = allById.get(FEATURED_POST_ID) ?? null;
+const popularRaw  = POPULAR_POST_IDS.map(id => allById.get(id)).filter(Boolean);
+
 const parents  = allCats.filter((c: any) => c.parent === 0);
-const posts    = wpPosts.map(mapPost);
+// WP returns posts newest-first — take the first 12 for the recent grid
+const posts    = allPostsForLookup.slice(0, 12).map(mapPost);
 const featured = featuredRaw ? mapPost(featuredRaw) : null;
 const popular  = popularRaw.map(mapPost);
 
