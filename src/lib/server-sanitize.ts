@@ -60,6 +60,26 @@ export function serverSanitizeHtml(html: string): string {
       'use':     ['href'],
     },
 
+    // Restrict inline styles to only the CSS properties Gutenberg legitimately outputs.
+    // Without this, sanitize-html passes ALL CSS through, enabling position:fixed overlays
+    // and background-image:url() data exfiltration via img-src CSP bypass.
+    allowedStyles: {
+      '*': {
+        'text-align':         [/^(left|center|right|justify)$/],
+        'float':              [/^(left|right|none)$/],
+        'width':              [/^\d+(%|px|em|rem)$/],
+        'max-width':          [/^\d+(%|px|em|rem)$/],
+        'color':              [/^#[0-9a-fA-F]{3,6}$/, /^rgb\(\d+,\s*\d+,\s*\d+\)$/, /^[a-z]+$/i],
+        'background-color':   [/^#[0-9a-fA-F]{3,6}$/, /^rgb\(\d+,\s*\d+,\s*\d+\)$/, /^[a-z]+$/i],
+        'font-size':          [/^\d+(px|em|rem|%)$/],
+        'font-weight':        [/^(normal|bold|\d{3})$/],
+        'margin':             [/^[\d\s]+(px|em|rem|%)?(\s[\d\s]+(px|em|rem|%)?)*$/],
+        'padding':            [/^[\d\s]+(px|em|rem|%)?(\s[\d\s]+(px|em|rem|%)?)*$/],
+      },
+      // Note: position, z-index, background-image, opacity, top/left/right/bottom
+      // are intentionally omitted — they enable overlay and exfiltration attacks.
+    },
+
     // Only http/https/mailto/tel — blocks javascript:, data:, vbscript:
     allowedSchemes: ['http', 'https', 'mailto', 'tel'],
     allowedSchemesByTag: {

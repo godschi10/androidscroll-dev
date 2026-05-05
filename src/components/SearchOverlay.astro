@@ -8,6 +8,9 @@ const searchData = JSON.stringify(posts.map(p => ({
   categories: p.data.categories ?? [],
   url: `/${p.slug}/`,
 })));
+// Escape </script> sequences so this non-executable JSON block cannot be
+// terminated early by a post title containing literal </script> text.
+const safeSearchData = searchData.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 ---
 
 <!-- Search trigger button -->
@@ -96,5 +99,5 @@ const searchData = JSON.stringify(posts.map(p => ({
 </div>
 
 <!-- Search data injected as a non-executable JSON block — avoids inline script CSP violations -->
-<script id="as-search-data" type="application/json" set:html={searchData}></script>
+<script id="as-search-data" type="application/json" set:html={safeSearchData}></script>
 <script src="/js/search-overlay.js" defer></script>

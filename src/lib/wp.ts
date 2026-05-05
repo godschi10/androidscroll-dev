@@ -215,6 +215,18 @@ const _decode = (str: string): string =>
 
 export const decode = _decode;
 
+// ─── JSON-LD safe serialiser ──────────────────────────────────────────────────
+// JSON.stringify does NOT escape </script>, so any string containing it will
+// break out of a <script type="application/ld+json"> block.
+// This helper escapes <, >, and & so the output is safe to embed in HTML.
+// Use everywhere a value goes into set:html on a <script> tag.
+export function jsonLdStringify(obj: unknown): string {
+  return JSON.stringify(obj)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
+}
+
 export const excerpt = (html: string, words = 30): string =>
   decode(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
     .split(' ').slice(0, words).join(' ') + '…';

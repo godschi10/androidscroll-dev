@@ -3,7 +3,7 @@ import '../styles/global.css';
 import '../styles/style.min.css';
 import SearchOverlay from '../components/SearchOverlay.astro';
 import AdSlot from '../components/AdSlot.astro';
-import { getAllPosts, getCategories, decode } from '../lib/wp';
+import { getAllPosts, getCategories, decode, jsonLdStringify } from '../lib/wp';
 import { ADSENSE_ENABLED, ADSENSE_CLIENT } from '../lib/config';
 
 const wpPosts = await getAllPosts();
@@ -146,7 +146,7 @@ const socialLinks = [
   )}
   
 {pageSchema && (
-  <script type="application/ld+json" set:html={JSON.stringify(pageSchema)} />
+  <script type="application/ld+json" set:html={jsonLdStringify(pageSchema)} />
 )}
 
   <style>
