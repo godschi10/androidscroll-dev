@@ -21,7 +21,7 @@ const safeContent = serverSanitizeHtml(page.content.rendered);
 ---
 
 <Layout title={title} description={description} rankMathHead={rankMathHead}>
-  <article style="max-width:640px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
+  <article style="max-width:600px; margin:auto; background:var(--bg-surface); padding:30px var(--container-side-padding);">
     <h1 style="margin-bottom:1em;">{title}</h1>
     <div class="post-content" set:html={safeContent}></div>
   </article>
