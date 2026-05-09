@@ -230,9 +230,12 @@ const socialLinks = [
   <meta name="theme-color" content="#00A88F" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#006e5e" media="(prefers-color-scheme: dark)" />
   <link rel="preconnect" href="https://images.androidscroll.com" />
+  <link rel="preconnect" href="https://analytics.androidscroll.com" />
   {cover && <link rel="preload" as="image" href={cover} fetchpriority="high" />}
   <link rel="preload" as="font" type="font/woff2" href="/fonts/space-grotesk-v22-latin-700.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/space-grotesk-v22-latin-600.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-v20-latin-regular.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-v20-latin-600.woff2" crossorigin />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" href="/AndroidScroll-Favicon.png" />
   <link rel="apple-touch-icon" href="/AndroidScroll-Favicon.png" />
@@ -300,7 +303,7 @@ const socialLinks = [
 
     <!-- Logo -->
     <a href="/" style="flex-shrink:0;">
-      <img src="https://images.androidscroll.com/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="180" height="50" style="max-height:38px; max-width:170px; display:block;" />
+      <img src="https://images.androidscroll.com/2026/01/cropped-Androidscroll-Logo-1.png" alt="AndroidScroll" width="180" height="50" style="max-height:38px; max-width:170px; display:block;" fetchpriority="high" />
     </a>
 
     <!-- Desktop Nav -->
@@ -447,8 +450,6 @@ const socialLinks = [
   </div>
 </footer>
 
-<script src="/js/nav.js" defer></script>
-
 <!-- Sticky Footer Ad -->
 <div class="as-sticky-footer" id="asStickyFooter">
   <button class="as-sf-close" id="asSfClose" aria-label="Close">
@@ -478,12 +479,9 @@ const socialLinks = [
   <!-- AD SLOT END — paste your ad code above this line -->
 
 </div>
-<script src="/js/sticky-ad.js" defer></script>
+<script src="/js/main.js" defer></script>
 <!-- End Sticky Footer Ad -->
 
-<!-- Matomo Engagement + Affiliate Tracking -->
-<script src="/js/matomo-engagement.js" defer></script>
-<!-- End Matomo Tracking -->
 <!-- Matomo -->
 <script src="/js/matomo-init.js" async></script>
 <!-- End Matomo -->

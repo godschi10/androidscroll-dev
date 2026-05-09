@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
 
 /* ==========================================================================
    TABLE OF CONTENTS
@@ -971,3 +970,49 @@ pre{margin: 0 0 40px;
     .as-sf-sub { font-family: var(--font-body); font-size: 11px; color: var(--text-muted); }
     .as-sf-cta { flex-shrink: 0; background: #F5A623; color: #fff; font-family: var(--font-body); font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: var(--radius-main); white-space: nowrap; transition: background 0.18s; }
     .as-sf-inner:hover .as-sf-cta { background: #e6951a; }
+
+
+
+
+
+
+
+
+/* ==========================================================================
+   19. GALLERY & IMAGES (WP Gutenberg)
+   ========================================================================== */
+figure.wp-block-gallery.has-nested-images { align-items: normal; }
+.wp-block-gallery.has-nested-images { display: flex; flex-wrap: wrap; gap: var(--wp--style--unstable-gallery-gap, 16px); margin: 0 0 40px; }
+.wp-block-gallery.has-nested-images figure.wp-block-image { box-sizing: border-box; display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin: 0; max-width: 100%; position: relative; width: calc(50% - var(--wp--style--unstable-gallery-gap, 16px) / 2); }
+.wp-block-gallery.has-nested-images figure.wp-block-image:not(#individual-image) { width: calc(50% - var(--wp--style--unstable-gallery-gap, 16px) / 2); }
+.wp-block-gallery.has-nested-images figure.wp-block-image > a,
+.wp-block-gallery.has-nested-images figure.wp-block-image > div { flex-direction: column; flex-grow: 1; margin: 0; }
+.wp-block-gallery.has-nested-images figure.wp-block-image img { display: block; height: auto; max-width: 100% !important; width: 100%; object-fit: cover; border-radius: var(--radius-main); }
+.wp-block-gallery.has-nested-images.is-cropped figure.wp-block-image:not(#individual-image) > a,
+.wp-block-gallery.has-nested-images.is-cropped figure.wp-block-image:not(#individual-image) > div:not(.components-drop-zone) { display: flex; }
+.wp-block-gallery.has-nested-images.is-cropped figure.wp-block-image:not(#individual-image) a,
+.wp-block-gallery.has-nested-images.is-cropped figure.wp-block-image:not(#individual-image) img { flex: 1 0 0%; height: 100%; object-fit: cover; width: 100%; }
+.wp-block-gallery.has-nested-images.columns-1 figure.wp-block-image:not(#individual-image) { width: 100%; }
+@media (min-width: 600px) {
+  .wp-block-gallery.has-nested-images.columns-3 figure.wp-block-image:not(#individual-image) { width: calc(33.33333% - var(--wp--style--unstable-gallery-gap, 16px) * .66667); }
+  .wp-block-gallery.has-nested-images.columns-4 figure.wp-block-image:not(#individual-image) { width: calc(25% - var(--wp--style--unstable-gallery-gap, 16px) * .75); }
+  .wp-block-gallery.has-nested-images.columns-default figure.wp-block-image:not(#individual-image) { width: calc(33.33% - var(--wp--style--unstable-gallery-gap, 16px) * .66667); }
+  .wp-block-gallery.has-nested-images.columns-default figure.wp-block-image:not(#individual-image):first-child:nth-last-child(2),
+  .wp-block-gallery.has-nested-images.columns-default figure.wp-block-image:not(#individual-image):first-child:nth-last-child(2) ~ figure.wp-block-image:not(#individual-image) { width: calc(50% - var(--wp--style--unstable-gallery-gap, 16px) * .5); }
+  .wp-block-gallery.has-nested-images.columns-default figure.wp-block-image:not(#individual-image):first-child:last-child { width: 100%; }
+}
+@media (max-width: 599px) {
+  .wp-block-gallery.has-nested-images figure.wp-block-image:not(#individual-image) { width: 100%; }
+}
+.wp-block-gallery.has-nested-images.aligncenter { justify-content: center; }
+.wp-block-gallery.has-nested-images figure.wp-block-image figcaption,
+.wp-block-gallery.has-nested-images figure.wp-block-image:has(figcaption):before { bottom: 0; left: 0; max-height: 100%; position: absolute; right: 0; }
+.wp-block-gallery.has-nested-images figure.wp-block-image:has(figcaption):before { content: ""; height: 100%; background: rgba(0,0,0,0.45); -webkit-mask-image: linear-gradient(0deg, #000 20%, transparent); mask-image: linear-gradient(0deg, #000 20%, transparent); max-height: 40%; pointer-events: none; border-radius: 0 0 var(--radius-main) var(--radius-main); }
+.wp-block-gallery.has-nested-images figure.wp-block-image figcaption { box-sizing: border-box; color: #fff; font-size: 13px; margin: 0; padding: 0.75em 0.85em; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.6); border-radius: 0 0 var(--radius-main) var(--radius-main); }
+.wp-block-image { margin: 0 0 1.5em; }
+.wp-block-image img { box-sizing: border-box; height: auto; max-width: 100%; vertical-align: bottom; border-radius: var(--radius-main); }
+.wp-block-image.aligncenter { text-align: center; }
+.wp-block-image.alignfull img, .wp-block-image.alignwide img { width: 100%; }
+.wp-block-image .alignleft { float: left; margin: 0.5em 1em 0.5em 0; }
+.wp-block-image .alignright { float: right; margin: 0.5em 0 0.5em 1em; }
+.wp-block-image figcaption, .wp-block-image :where(figcaption) { font-size: 0.8em; color: var(--text-muted); text-align: center; margin-top: 0.5em; margin-bottom: 1em; line-height: 1.5; padding: 6px 10px; }
